@@ -26,8 +26,59 @@ model Post {
   imageUrl  String?
   authorId  String
   author    User     @relation(fields: [authorId], references: [id])
+  tags      PostTag[]
+  links     Link[]
+  eventId   String?
+  event     Event?   @relation(fields: [eventId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Tag {
+  id    String   @id @default(uuid())
+  name  String   @unique
+  label String
+  posts PostTag[]
+}
+
+model PostTag {
+  postId String
+  tagId  String
+  post   Post  @relation(fields: [postId], references: [id])
+  tag    Tag   @relation(fields: [tagId], references: [id])
+
+  @@id([postId, tagId])
+}
+
+model Link {
+  id        String @id @default(uuid())
+  url       String
+  title     String?
+  postId    String
+  post      Post   @relation(fields: [postId], references: [id])
+}
+
+model Event {
+  id          String              @id @default(uuid())
+  title       String
+  description String?
+  date        DateTime
+  location    String?
+  post        Post[]
+  registrations EventRegistration[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+model EventRegistration {
+  id      String   @id @default(uuid())
+  name    String
+  email   String
+  eventId String
+  event   Event    @relation(fields: [eventId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([email, eventId])
 }
 
 enum Role {

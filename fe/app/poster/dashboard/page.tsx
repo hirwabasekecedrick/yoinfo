@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createPost, fetchPosts } from '@/lib/api';
+import PublishModal from '@/components/publish-modal';
 import Link from 'next/link';
 
 const API_URL = 'http://localhost:5000';
@@ -16,6 +17,7 @@ export default function PosterDashboard() {
   const [posts, setPosts] = useState<any[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showPublishModal, setShowPublishModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -56,6 +58,10 @@ export default function PosterDashboard() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim()) return;
+    setShowPublishModal(true);
+  };
+
+  const handlePublish = async (data: { tags: string[]; links: { url: string; title?: string }[]; eventId: string | null }) => {
     setIsSubmitting(true);
     setMessage(null);
     try {
@@ -75,11 +81,12 @@ export default function PosterDashboard() {
         imageUrl = uploadData.url;
       }
 
-      const newPost = await createPost(content, token!, imageUrl);
+      const newPost = await createPost(content, token!, imageUrl, data.tags, data.links, data.eventId || undefined);
       setContent('');
       removeImage();
       setPosts((prev) => [newPost, ...prev]);
       setMessage({ type: 'success', text: 'Update published successfully.' });
+      setShowPublishModal(false);
       setTimeout(() => setMessage(null), 4000);
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Failed to publish update.' });
@@ -352,6 +359,50 @@ export default function PosterDashboard() {
                                 />
                               </div>
                             )}
+                            {post.tags?.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 mt-3">
+                                {post.tags.map((pt: any) => (
+                                  <span key={pt.tag.id} className="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-xs font-medium text-neutral-600 dark:text-neutral-400">
+                                    {pt.tag.label}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            {post.links?.length > 0 && (
+                              <div className="space-y-1.5 mt-3">
+                                {post.links.map((link: any) => (
+                                  <a
+                                    key={link.id}
+                                    href={link.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                                  >
+                                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                    </svg>
+                                    {link.title || link.url}
+                                  </a>
+                                ))}
+                              </div>
+                            )}
+                            {post.event && (
+                              <div className="mt-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-900">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  </svg>
+                                  <span className="text-sm font-medium text-amber-800 dark:text-amber-300">{post.event.title}</span>
+                                </div>
+                                {post.event.description && (
+                                  <p className="text-xs text-amber-700 dark:text-amber-400 mb-1">{post.event.description}</p>
+                                )}
+                                <div className="text-xs text-amber-600 dark:text-amber-400">
+                                  {new Date(post.event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                  {post.event.location && ` · ${post.event.location}`}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -363,6 +414,13 @@ export default function PosterDashboard() {
           </div>
         </main>
       </div>
+
+      <PublishModal
+        open={showPublishModal}
+        onClose={() => setShowPublishModal(false)}
+        onPublish={handlePublish}
+        isSubmitting={isSubmitting}
+      />
     </div>
   );
 }

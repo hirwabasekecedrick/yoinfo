@@ -5,7 +5,7 @@ import { dispatchWebhookEvent } from '../services/webhook.service';
 
 export const createPost = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { content, imageUrl } = req.body;
+    const { content, imageUrl, tags, links, eventId } = req.body;
     if (!req.user) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -16,11 +16,21 @@ export const createPost = async (req: AuthRequest, res: Response): Promise<void>
         content,
         imageUrl: imageUrl || null,
         authorId: req.user.id,
+        eventId: eventId || null,
+        tags: tags?.length
+          ? { create: tags.map((tagId: string) => ({ tagId })) }
+          : undefined,
+        links: links?.length
+          ? { create: links.map((link: { url: string; title?: string }) => ({ url: link.url, title: link.title || null })) }
+          : undefined,
       },
       include: {
         author: {
           select: { id: true, name: true, email: true },
         },
+        tags: { include: { tag: true } },
+        links: true,
+        event: true,
       },
     });
 
@@ -46,6 +56,9 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
         author: {
           select: { id: true, name: true, email: true },
         },
+        tags: { include: { tag: true } },
+        links: true,
+        event: { include: { _count: { select: { registrations: true } } } },
       },
     });
 

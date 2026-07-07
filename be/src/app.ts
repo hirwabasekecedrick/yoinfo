@@ -8,6 +8,8 @@ import authRoutes from "./routes/auth.routes";
 import postRoutes from "./routes/post.routes";
 import n8nRoutes from "./routes/n8n.routes";
 import uploadRoutes from "./routes/upload.routes";
+import eventRoutes from "./routes/event.routes";
+import tagRoutes from "./routes/tag.routes";
 
 const app = express();
 
@@ -26,5 +28,7 @@ app.use("/auth", authRoutes);
 app.use("/posts", postRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/n8n", n8nRoutes);
+app.use("/api/events", eventRoutes);
+app.use("/api/tags", tagRoutes);
 
 export default app;
