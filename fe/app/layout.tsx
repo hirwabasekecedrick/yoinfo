@@ -1,23 +1,17 @@
 import type { Metadata } from "next";
-import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
-
-const plusJakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
   title: "InfoPulse",
   description:
-    "Share updates and announcements across your organization.",
+    "Discover investment opportunities, share updates, and grow your business with InfoPulse.",
 };
 
 export default function RootLayout({
@@ -28,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${plusJakarta.variable} antialiased bg-background text-foreground min-h-screen`}
+        className={`${montserrat.variable} antialiased bg-white text-gray-900 min-h-screen`}
       >
         {children}
       </body>

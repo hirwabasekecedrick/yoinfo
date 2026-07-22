@@ -1,172 +1,125 @@
-import { fetchPosts } from '@/lib/api';
+'use client';
+
 import Link from 'next/link';
-import { Suspense } from 'react';
-import EventRegistration from '@/components/event-registration';
+import Image from 'next/image';
 
-async function PostsFeed() {
-  let posts: any[] = [];
-  try {
-    posts = await fetchPosts();
-  } catch (error) {
-    console.error(error);
-  }
+const FEATURES = [
+  {
+    title: 'Investment Opportunities',
+    description: 'Discover high-potential investments across real estate, tech, agriculture, and more. Search by category, location, and budget.',
+    href: '/investments',
+    icon: (
+      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+      </svg>
+    ),
+    color: 'from-green-500 to-emerald-600',
+    bgColor: 'bg-green-50',
+    textColor: 'text-green-700',
+    stats: '50+ Opportunities',
+  },
+  {
+    title: 'Post an Update',
+    description: 'Share news, events, and announcements. Add images, links, and choose a call-to-action for your audience.',
+    href: '/poster/dashboard',
+    icon: (
+      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+      </svg>
+    ),
+    color: 'from-green-600 to-teal-600',
+    bgColor: 'bg-green-50',
+    textColor: 'text-green-700',
+    stats: 'Share & Engage',
+  },
+  {
+    title: 'Business Profile',
+    description: 'Showcase your business to the world. Add your services, gallery, operating hours, team, and customer testimonials.',
+    href: '/business',
+    icon: (
+      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+      </svg>
+    ),
+    color: 'from-emerald-500 to-green-600',
+    bgColor: 'bg-green-50',
+    textColor: 'text-green-700',
+    stats: 'Grow Your Brand',
+  },
+];
 
-  if (posts.length === 0) {
-    return (
-      <div className="text-center py-24">
-        <div className="w-16 h-16 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-1">No posts yet</h3>
-        <p className="text-sm text-neutral-500">Check back soon for new updates.</p>
+const STATS = [
+  { label: 'Active Investors', value: '2,400+' },
+  { label: 'Businesses Listed', value: '850+' },
+  { label: 'Posts Published', value: '12K+' },
+  { label: 'Connections Made', value: '30K+' },
+];
+
+const CTA_ACTIONS = [
+  'Explore Opportunity',
+  'Discover More',
+  'Get Started',
+  'Take Action Today',
+];
+
+function FeatureCard({ feature, index }: { feature: typeof FEATURES[0]; index: number }) {
+  return (
+    <Link
+      href={feature.href}
+      className={`group relative bg-white rounded-2xl border border-green-100 p-8 transition-all duration-300 hover:shadow-xl hover:shadow-green-100/50 hover:border-green-200 hover:-translate-y-1 animate-fade-in-up stagger-${index + 1} opacity-0`}
+    >
+      <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform duration-300`}>
+        {feature.icon}
       </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      {posts.map((post: any, index: number) => (
-        <article
-          key={post.id}
-          className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden transition-shadow hover:shadow-md"
-        >
-          <div className="p-5 sm:p-6">
-            <div className="flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 flex items-center justify-center font-semibold text-sm flex-shrink-0">
-                {post.author?.name?.[0]?.toUpperCase() || 'U'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm text-neutral-900 dark:text-neutral-100">
-                      {post.author?.name || 'Anonymous'}
-                    </span>
-                  </div>
-                  <time className="text-xs text-neutral-400 whitespace-nowrap">
-                    {new Date(post.createdAt).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
-                  </time>
-                </div>
-                <p className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap">
-                  {post.content}
-                </p>
-                {post.imageUrl && (
-                  <div className="mt-4 -mx-1">
-                    <img
-                      src={post.imageUrl}
-                      alt="Post image"
-                      className="rounded-lg w-full max-h-96 object-cover border border-neutral-200 dark:border-neutral-800"
-                      loading="lazy"
-                    />
-                  </div>
-                )}
-                {post.tags?.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-3">
-                    {post.tags.map((pt: any) => (
-                      <span key={pt.tag.id} className="px-2.5 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-xs font-medium text-neutral-600 dark:text-neutral-400">
-                        {pt.tag.label}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {post.links?.length > 0 && (
-                  <div className="space-y-1.5 mt-3">
-                    {post.links.map((link: any) => (
-                      <a
-                        key={link.id}
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                      >
-                        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                        </svg>
-                        {link.title || link.url}
-                      </a>
-                    ))}
-                  </div>
-                )}
-                {post.event && (
-                  <div className="mt-4 p-4 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-900">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <svg className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <span className="text-sm font-semibold text-amber-800 dark:text-amber-300">{post.event.title}</span>
-                    </div>
-                    {post.event.description && (
-                      <p className="text-sm text-amber-700 dark:text-amber-400/80 mb-2">{post.event.description}</p>
-                    )}
-                    <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 mb-3">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span>
-                        {new Date(post.event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                        {post.event.location && ` · ${post.event.location}`}
-                      </span>
-                    </div>
-                    <EventRegistration eventId={post.event.id} />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </article>
-      ))}
-    </div>
-  );
-}
-
-function PostsFeedSkeleton() {
-  return (
-    <div className="space-y-6">
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 sm:p-6">
-          <div className="flex items-start gap-3.5">
-            <div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-700 flex-shrink-0 animate-pulse" />
-            <div className="flex-1 space-y-3">
-              <div className="h-4 w-1/3 rounded bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
-              <div className="h-3 w-full rounded bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
-              <div className="h-3 w-4/5 rounded bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
+      <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
+      <p className="text-gray-500 text-sm leading-relaxed mb-6">{feature.description}</p>
+      <div className="flex items-center justify-between">
+        <span className={`text-xs font-semibold ${feature.textColor} ${feature.bgColor} px-3 py-1 rounded-full`}>
+          {feature.stats}
+        </span>
+        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-green-600 group-hover:gap-3 transition-all duration-300">
+          Get Started
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+          </svg>
+        </span>
+      </div>
+    </Link>
   );
 }
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-neutral-950/80 backdrop-blur-lg border-b border-neutral-200 dark:border-neutral-800">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-neutral-900 dark:bg-white flex items-center justify-center">
-              <svg className="w-4 h-4 text-white dark:text-neutral-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+    <div className="min-h-screen bg-white">
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-green-100">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="h-10 overflow-hidden">
+              <Image src="/logoo.png" alt="InfoPulse Logo" width={120} height={40} className="object-contain" />
             </div>
-            <span className="font-semibold text-base text-neutral-900 dark:text-neutral-100">InfoPulse</span>
           </Link>
           <nav className="flex items-center gap-2">
             <Link
+              href="/investments"
+              className="text-sm font-medium text-gray-600 hover:text-green-600 px-3 py-2 rounded-lg hover:bg-green-50 transition-colors"
+            >
+              Investments
+            </Link>
+            <Link
+              href="/business"
+              className="text-sm font-medium text-gray-600 hover:text-green-600 px-3 py-2 rounded-lg hover:bg-green-50 transition-colors"
+            >
+              Business
+            </Link>
+            <Link
               href="/auth"
-              className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 px-3 py-1.5 transition-colors"
+              className="text-sm font-medium text-gray-600 hover:text-green-600 px-3 py-2 rounded-lg hover:bg-green-50 transition-colors"
             >
               Sign in
             </Link>
             <Link
               href="/auth"
-              className="text-sm font-medium bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-4 py-1.5 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
+              className="text-sm font-semibold bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition-colors shadow-sm shadow-green-200"
             >
               Get Started
             </Link>
@@ -175,34 +128,158 @@ export default function Home() {
       </header>
 
       <main>
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-          <div className="mb-8 sm:mb-10">
-            <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">
-              Updates
-            </h1>
-            <p className="text-sm text-neutral-500 mt-1">
-              Latest news and announcements
+        {/* Hero Section */}
+        <section className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-green-50/80 to-white" />
+          <div className="absolute top-20 left-1/4 w-72 h-72 bg-green-200/30 rounded-full blur-3xl" />
+          <div className="absolute top-40 right-1/4 w-96 h-96 bg-emerald-100/40 rounded-full blur-3xl" />
+
+          <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-20 sm:pt-28 pb-16 sm:pb-24">
+            <div className="text-center max-w-3xl mx-auto">
+              <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-4 py-1.5 mb-6 animate-fade-in-down opacity-0">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-xs font-semibold text-green-700">The platform for growth</span>
+              </div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight mb-6 animate-fade-in-up opacity-0 stagger-1">
+                Invest. Publish.{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500">
+                  Grow.
+                </span>
+              </h1>
+              <p className="text-lg text-gray-500 leading-relaxed mb-10 max-w-2xl mx-auto animate-fade-in-up opacity-0 stagger-2">
+                Your all-in-one platform to discover investment opportunities, share updates with your audience, and build a powerful business profile.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up opacity-0 stagger-3">
+                <Link
+                  href="/investments"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-green-600 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-green-200 hover:shadow-xl hover:shadow-green-300 hover:-translate-y-0.5"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                  </svg>
+                  Explore Investments
+                </Link>
+                <Link
+                  href="/poster/dashboard"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-green-700 font-semibold px-8 py-3.5 rounded-xl border-2 border-green-200 hover:border-green-300 hover:bg-green-50 transition-all"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  Start Posting
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Stats Section */}
+        <section className="border-y border-green-100 bg-green-50/50">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+              {STATS.map((stat) => (
+                <div key={stat.label} className="text-center">
+                  <div className="text-3xl sm:text-4xl font-extrabold text-green-600 mb-1">{stat.value}</div>
+                  <div className="text-sm text-gray-500 font-medium">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Feature Cards Section */}
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight mb-4">
+              Everything you need in one place
+            </h2>
+            <p className="text-gray-500 text-lg max-w-2xl mx-auto">
+              Whether you are an investor, business owner, or content creator — InfoPulse has the tools to help you succeed.
             </p>
           </div>
-          <Suspense fallback={<PostsFeedSkeleton />}>
-            <PostsFeed />
-          </Suspense>
-        </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {FEATURES.map((feature, index) => (
+              <FeatureCard key={feature.title} feature={feature} index={index} />
+            ))}
+          </div>
+        </section>
+
+        {/* CTA Actions Preview */}
+        <section className="bg-gradient-to-b from-white to-green-50">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
+            <div className="text-center mb-14">
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight mb-4">
+                Powerful calls-to-action
+              </h2>
+              <p className="text-gray-500 text-lg max-w-2xl mx-auto">
+                Every post comes with a customizable action button. Choose from 21 engaging CTAs to drive your audience to take the next step.
+              </p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto">
+              {CTA_ACTIONS.map((action) => (
+                <span
+                  key={action}
+                  className="px-5 py-2.5 rounded-full bg-white border border-green-200 text-sm font-semibold text-green-700 hover:bg-green-50 hover:border-green-300 transition-colors cursor-default"
+                >
+                  {action}
+                </span>
+              ))}
+              <span className="px-5 py-2.5 rounded-full bg-green-100 text-sm font-semibold text-green-600">
+                + 17 more
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA */}
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-20 sm:pb-28">
+          <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-3xl p-10 sm:p-16 text-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
+            <div className="relative">
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">
+                Ready to get started?
+              </h2>
+              <p className="text-green-100 text-lg mb-8 max-w-xl mx-auto">
+                Join thousands of investors, businesses, and creators already growing on InfoPulse.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link
+                  href="/auth"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-green-700 font-bold px-8 py-4 rounded-xl hover:bg-green-50 transition-all shadow-lg"
+                >
+                  Create Free Account
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
+                </Link>
+                <Link
+                  href="/investments"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-green-700/50 text-white font-semibold px-8 py-4 rounded-xl hover:bg-green-700/70 transition-all border border-white/20"
+                >
+                  Browse Investments
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
-      <footer className="border-t border-neutral-200 dark:border-neutral-800">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded bg-neutral-900 dark:bg-white flex items-center justify-center">
-              <svg className="w-3 h-3 text-white dark:text-neutral-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+      <footer className="border-t border-green-100 bg-green-50/30">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="h-8 overflow-hidden">
+              <Image src="/logoo.png" alt="InfoPulse Logo" width={100} height={32} className="object-contain" />
             </div>
-            <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400">InfoPulse</span>
+            <div className="flex items-center gap-6 text-sm text-gray-500">
+              <Link href="/investments" className="hover:text-green-600 transition-colors">Investments</Link>
+              <Link href="/business" className="hover:text-green-600 transition-colors">Business</Link>
+              <Link href="/poster/dashboard" className="hover:text-green-600 transition-colors">Post</Link>
+            </div>
+            <p className="text-xs text-gray-400">
+              &copy; {new Date().getFullYear()} InfoPulse. All rights reserved.
+            </p>
           </div>
-          <p className="text-xs text-neutral-400">
-            &copy; {new Date().getFullYear()} InfoPulse. All rights reserved.
-          </p>
         </div>
       </footer>
     </div>

@@ -5,7 +5,7 @@ import { dispatchWebhookEvent } from '../services/webhook.service';
 
 export const createPost = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { content, imageUrl, tags, links, eventId } = req.body;
+    const { title, content, imageUrl, tags, links, eventId } = req.body;
     if (!req.user) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -13,6 +13,7 @@ export const createPost = async (req: AuthRequest, res: Response): Promise<void>
 
     const post = await prisma.post.create({
       data: {
+        title: title || null,
         content,
         imageUrl: imageUrl || null,
         authorId: req.user.id,

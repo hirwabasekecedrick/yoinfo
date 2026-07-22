@@ -10,10 +10,12 @@ import n8nRoutes from "./routes/n8n.routes";
 import uploadRoutes from "./routes/upload.routes";
 import eventRoutes from "./routes/event.routes";
 import tagRoutes from "./routes/tag.routes";
+import investmentRoutes from "./routes/investment.routes";
+import businessRoutes from "./routes/business.routes";
 
 const app = express();
 
-app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:3000", credentials: true }));
+app.use(cors());
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(morgan("dev"));
 app.use(express.json());
@@ -30,5 +32,7 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/n8n", n8nRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/tags", tagRoutes);
+app.use("/api/investments", investmentRoutes);
+app.use("/api/businesses", businessRoutes);
 
 export default app;

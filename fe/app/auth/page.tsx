@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { login, register } from '@/lib/api';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -40,61 +41,76 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 flex">
-      <div className="hidden lg:flex lg:w-1/2 bg-neutral-900 p-12 flex-col justify-between relative">
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Left Panel — Brand */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-green-600 to-emerald-700 p-12 flex-col justify-between relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
+
         <div className="relative z-10">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-md bg-white/20 flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+            <div className="h-10 overflow-hidden">
+              <Image src="/logoo.png" alt="InfoPulse Logo" width={120} height={40} className="object-contain" />
             </div>
-            <span className="font-semibold text-lg text-white">InfoPulse</span>
           </Link>
         </div>
 
         <div className="relative z-10">
-          <blockquote className="text-white/80 text-lg leading-relaxed max-w-sm">
-            &ldquo;The simplest way to share updates across your organization.&rdquo;
+          <blockquote className="text-white/90 text-xl leading-relaxed max-w-sm font-medium">
+            &ldquo;Invest. Publish. Grow. Your all-in-one platform for opportunities and business growth.&rdquo;
           </blockquote>
-          <p className="text-white/40 text-sm mt-3">
-            &copy; {new Date().getFullYear()} InfoPulse
+          <div className="flex items-center gap-6 mt-8">
+            <div>
+              <div className="text-2xl font-extrabold text-white">2,400+</div>
+              <div className="text-sm text-white/60">Investors</div>
+            </div>
+            <div className="w-px h-10 bg-white/20" />
+            <div>
+              <div className="text-2xl font-extrabold text-white">850+</div>
+              <div className="text-sm text-white/60">Businesses</div>
+            </div>
+            <div className="w-px h-10 bg-white/20" />
+            <div>
+              <div className="text-2xl font-extrabold text-white">12K+</div>
+              <div className="text-sm text-white/60">Posts</div>
+            </div>
+          </div>
+          <p className="text-white/40 text-sm mt-6">
+            &copy; {new Date().getFullYear()} InfoPulse. All rights reserved.
           </p>
         </div>
       </div>
 
+      {/* Right Panel — Form */}
       <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-sm">
-          <Link href="/" className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="w-7 h-7 rounded-md bg-neutral-900 dark:bg-white flex items-center justify-center">
-              <svg className="w-4 h-4 text-white dark:text-neutral-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+          <Link href="/" className="lg:hidden flex items-center gap-2.5 mb-8">
+            <div className="h-10 overflow-hidden">
+              <Image src="/logoo.png" alt="InfoPulse Logo" width={120} height={40} className="object-contain" />
             </div>
-            <span className="font-semibold text-base text-neutral-900 dark:text-neutral-100">InfoPulse</span>
           </Link>
 
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-1">
+            <h1 className="text-2xl font-extrabold text-gray-900 mb-1">
               {isLogin ? 'Welcome back' : 'Create your account'}
             </h1>
-            <p className="text-sm text-neutral-500">
-              {isLogin ? 'Sign in to your account.' : 'Join your organization on InfoPulse.'}
+            <p className="text-sm text-gray-500">
+              {isLogin ? 'Sign in to access your dashboard.' : 'Join InfoPulse and start growing.'}
             </p>
           </div>
 
           {error && (
-            <div className="flex items-start gap-2.5 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm mb-5">
-              <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <div className="flex items-start gap-2.5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-5">
+              <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
               </svg>
               {error}
             </div>
           )}
           {success && (
-            <div className="flex items-start gap-2.5 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400 px-4 py-3 rounded-lg text-sm mb-5">
-              <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <div className="flex items-start gap-2.5 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm mb-5">
+              <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               {success}
             </div>
@@ -103,7 +119,7 @@ export default function AuthPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
+                <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-1.5">
                   Full Name
                 </label>
                 <input
@@ -111,14 +127,14 @@ export default function AuthPage() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-lg px-4 py-2.5 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent transition-all"
+                  className="w-full border border-green-200 bg-white text-gray-900 rounded-xl px-4 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                   placeholder="Jane Doe"
                   required={!isLogin}
                 />
               </div>
             )}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1.5">
                 Email address
               </label>
               <input
@@ -126,18 +142,18 @@ export default function AuthPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-lg px-4 py-2.5 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent transition-all"
+                className="w-full border border-green-200 bg-white text-gray-900 rounded-xl px-4 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                 placeholder="you@company.com"
                 required
               />
             </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor="password" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                <label htmlFor="password" className="block text-sm font-semibold text-gray-700">
                   Password
                 </label>
                 {isLogin && (
-                  <span className="text-xs text-neutral-400">Min. 6 characters</span>
+                  <span className="text-xs text-gray-400">Min. 6 characters</span>
                 )}
               </div>
               <input
@@ -145,7 +161,7 @@ export default function AuthPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-lg px-4 py-2.5 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent transition-all"
+                className="w-full border border-green-200 bg-white text-gray-900 rounded-xl px-4 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                 placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
                 required
                 minLength={6}
@@ -156,7 +172,7 @@ export default function AuthPage() {
               id={isLogin ? 'btn-signin' : 'btn-register'}
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-medium py-2.5 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors disabled:opacity-60 disabled:cursor-not-allowed text-sm mt-1"
+              className="w-full flex items-center justify-center gap-2 bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed text-sm mt-2 shadow-lg shadow-green-200"
             >
               {isLoading ? (
                 <>
@@ -173,13 +189,13 @@ export default function AuthPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <span className="text-sm text-neutral-500">
+            <span className="text-sm text-gray-500">
               {isLogin ? "Don't have an account? " : 'Already have an account? '}
             </span>
             <button
               type="button"
               onClick={() => { setIsLogin(!isLogin); setError(''); setSuccess(''); }}
-              className="text-sm font-medium text-neutral-900 dark:text-neutral-100 hover:underline"
+              className="text-sm font-semibold text-green-600 hover:text-green-700 transition-colors"
             >
               {isLogin ? 'Create one' : 'Sign in'}
             </button>

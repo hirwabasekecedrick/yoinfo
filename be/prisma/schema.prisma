@@ -16,12 +16,15 @@ model User {
   name      String?
   role      Role     @default(POSTER)
   posts     Post[]
+  investments Investment[]
+  businesses Business[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Post {
   id        String   @id @default(uuid())
+  title     String?
   content   String
   imageUrl  String?
   authorId  String
@@ -79,6 +82,55 @@ model EventRegistration {
   createdAt DateTime @default(now())
 
   @@unique([email, eventId])
+}
+
+model Investment {
+  id              String   @id @default(uuid())
+  title           String
+  category        String
+  summary         String
+  description     String?
+  minInvestment   Float
+  maxInvestment   Float
+  location        String
+  status          String   @default("Open")
+  roi             String
+  imageUrl        String?
+  featured        Boolean  @default(false)
+  authorId        String
+  author          User     @relation(fields: [authorId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Business {
+  id                  String   @id @default(uuid())
+  name                String
+  tagline             String?
+  category            String
+  description         String?
+  logo                String?
+  coverImage          String?
+  phone               String?
+  email               String?
+  website             String?
+  address             String?
+  city                String?
+  country             String?
+  registrationNumber  String?
+  taxId               String?
+  certifications      String?
+  services            String[]
+  operatingHours      Json?
+  primaryCTA          String?
+  rating              Float    @default(0)
+  reviewCount         Int      @default(0)
+  featured            Boolean  @default(false)
+  authorId            String
+  author              User     @relation(fields: [authorId], references: [id])
+  teamMembers         Json?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
 
 enum Role {

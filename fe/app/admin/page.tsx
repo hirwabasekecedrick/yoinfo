@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-const API_URL = 'http://localhost:5000';
+const API_URL = 'https://infopulse-be.onrender.com/';
 
 type Post = { id: string; content: string; imageUrl?: string; createdAt: string; author: { id: string; name: string; email: string } };
 type User = { id: string; name: string; email: string; role: string; createdAt: string };
