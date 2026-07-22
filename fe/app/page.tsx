@@ -3,90 +3,20 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
-const FEATURES = [
-  {
-    title: 'Investment Opportunities',
-    description: 'Discover high-potential investments across real estate, tech, agriculture, and more. Search by category, location, and budget.',
-    href: '/investments',
-    icon: (
-      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
-      </svg>
-    ),
-    color: 'from-green-500 to-emerald-600',
-    bgColor: 'bg-green-50',
-    textColor: 'text-green-700',
-    stats: '50+ Opportunities',
-  },
-  {
-    title: 'Post an Update',
-    description: 'Share news, events, and announcements. Add images, links, and choose a call-to-action for your audience.',
-    href: '/poster/dashboard',
-    icon: (
-      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-      </svg>
-    ),
-    color: 'from-green-600 to-teal-600',
-    bgColor: 'bg-green-50',
-    textColor: 'text-green-700',
-    stats: 'Share & Engage',
-  },
-  {
-    title: 'Business Profile',
-    description: 'Showcase your business to the world. Add your services, gallery, operating hours, team, and customer testimonials.',
-    href: '/business',
-    icon: (
-      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
-      </svg>
-    ),
-    color: 'from-emerald-500 to-green-600',
-    bgColor: 'bg-green-50',
-    textColor: 'text-green-700',
-    stats: 'Grow Your Brand',
-  },
-];
-
 const STATS = [
-  { label: 'Active Investors', value: '2,400+' },
-  { label: 'Businesses Listed', value: '850+' },
+  { label: 'Active Users', value: '2,400+' },
   { label: 'Posts Published', value: '12K+' },
-  { label: 'Connections Made', value: '30K+' },
+  { label: 'Engagements', value: '30K+' },
+  { label: 'Growth Rate', value: '150%' },
 ];
 
 const CTA_ACTIONS = [
-  'Explore Opportunity',
-  'Discover More',
+  'Book Now',
   'Get Started',
-  'Take Action Today',
+  'Learn More',
+  'Sign Up Today',
+  'Join Now',
 ];
-
-function FeatureCard({ feature, index }: { feature: typeof FEATURES[0]; index: number }) {
-  return (
-    <Link
-      href={feature.href}
-      className={`group relative bg-white rounded-2xl border border-green-100 p-8 transition-all duration-300 hover:shadow-xl hover:shadow-green-100/50 hover:border-green-200 hover:-translate-y-1 animate-fade-in-up stagger-${index + 1} opacity-0`}
-    >
-      <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform duration-300`}>
-        {feature.icon}
-      </div>
-      <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-      <p className="text-gray-500 text-sm leading-relaxed mb-6">{feature.description}</p>
-      <div className="flex items-center justify-between">
-        <span className={`text-xs font-semibold ${feature.textColor} ${feature.bgColor} px-3 py-1 rounded-full`}>
-          {feature.stats}
-        </span>
-        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-green-600 group-hover:gap-3 transition-all duration-300">
-          Get Started
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-          </svg>
-        </span>
-      </div>
-    </Link>
-  );
-}
 
 export default function Home() {
   return (
@@ -100,16 +30,16 @@ export default function Home() {
           </Link>
           <nav className="flex items-center gap-2">
             <Link
-              href="/investments"
+              href="/poster/dashboard"
               className="text-sm font-medium text-gray-600 hover:text-green-600 px-3 py-2 rounded-lg hover:bg-green-50 transition-colors"
             >
-              Investments
+              Dashboard
             </Link>
             <Link
-              href="/business"
+              href="/"
               className="text-sm font-medium text-gray-600 hover:text-green-600 px-3 py-2 rounded-lg hover:bg-green-50 transition-colors"
             >
-              Business
+              Feed
             </Link>
             <Link
               href="/auth"
@@ -138,35 +68,35 @@ export default function Home() {
             <div className="text-center max-w-3xl mx-auto">
               <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-4 py-1.5 mb-6 animate-fade-in-down opacity-0">
                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-xs font-semibold text-green-700">The platform for growth</span>
+                <span className="text-xs font-semibold text-green-700">The platform for publishing</span>
               </div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight mb-6 animate-fade-in-up opacity-0 stagger-1">
-                Invest. Publish.{' '}
+                Publish. Share.{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500">
                   Grow.
                 </span>
               </h1>
               <p className="text-lg text-gray-500 leading-relaxed mb-10 max-w-2xl mx-auto animate-fade-in-up opacity-0 stagger-2">
-                Your all-in-one platform to discover investment opportunities, share updates with your audience, and build a powerful business profile.
+                Share news, events, and announcements with your audience. Add images, links, and choose a call-to-action for your posts.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up opacity-0 stagger-3">
                 <Link
-                  href="/investments"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-green-600 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-green-200 hover:shadow-xl hover:shadow-green-300 hover:-translate-y-0.5"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
-                  </svg>
-                  Explore Investments
-                </Link>
-                <Link
                   href="/poster/dashboard"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-green-700 font-semibold px-8 py-3.5 rounded-xl border-2 border-green-200 hover:border-green-300 hover:bg-green-50 transition-all"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-green-600 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-green-200 hover:shadow-xl hover:shadow-green-300 hover:-translate-y-0.5"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                   </svg>
                   Start Posting
+                </Link>
+                <Link
+                  href="/"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-green-700 font-semibold px-8 py-3.5 rounded-xl border-2 border-green-200 hover:border-green-300 hover:bg-green-50 transition-all"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                  </svg>
+                  View Feed
                 </Link>
               </div>
             </div>
@@ -187,20 +117,44 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Feature Cards Section */}
+        {/* Features Section */}
         <section className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
           <div className="text-center mb-14">
             <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight mb-4">
-              Everything you need in one place
+              Everything you need to publish
             </h2>
             <p className="text-gray-500 text-lg max-w-2xl mx-auto">
-              Whether you are an investor, business owner, or content creator — InfoPulse has the tools to help you succeed.
+              Create engaging posts with images, links, tags, and powerful calls-to-action.
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            {FEATURES.map((feature, index) => (
-              <FeatureCard key={feature.title} feature={feature} index={index} />
-            ))}
+            <div className="group relative bg-white rounded-2xl border border-green-100 p-8 transition-all duration-300 hover:shadow-xl hover:shadow-green-100/50 hover:border-green-200 hover:-translate-y-1">
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Rich Content</h3>
+              <p className="text-gray-500 text-sm leading-relaxed">Create posts with titles, images, and formatted content up to 250 words.</p>
+            </div>
+            <div className="group relative bg-white rounded-2xl border border-green-100 p-8 transition-all duration-300 hover:shadow-xl hover:shadow-green-100/50 hover:border-green-200 hover:-translate-y-1">
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-green-600 to-teal-600 flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Links & Tags</h3>
+              <p className="text-gray-500 text-sm leading-relaxed">Add custom links and tags to organize and enhance your posts.</p>
+            </div>
+            <div className="group relative bg-white rounded-2xl border border-green-100 p-8 transition-all duration-300 hover:shadow-xl hover:shadow-green-100/50 hover:border-green-200 hover:-translate-y-1">
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25V4.5m5.834.166l-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243l-1.59-1.59" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Powerful CTAs</h3>
+              <p className="text-gray-500 text-sm leading-relaxed">Choose from 21+ call-to-action buttons to drive engagement.</p>
+            </div>
           </div>
         </section>
 
@@ -225,7 +179,7 @@ export default function Home() {
                 </span>
               ))}
               <span className="px-5 py-2.5 rounded-full bg-green-100 text-sm font-semibold text-green-600">
-                + 17 more
+                + 16 more
               </span>
             </div>
           </div>
@@ -241,7 +195,7 @@ export default function Home() {
                 Ready to get started?
               </h2>
               <p className="text-green-100 text-lg mb-8 max-w-xl mx-auto">
-                Join thousands of investors, businesses, and creators already growing on InfoPulse.
+                Join thousands of creators already growing on InfoPulse.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
@@ -254,10 +208,10 @@ export default function Home() {
                   </svg>
                 </Link>
                 <Link
-                  href="/investments"
+                  href="/poster/dashboard"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-green-700/50 text-white font-semibold px-8 py-4 rounded-xl hover:bg-green-700/70 transition-all border border-white/20"
                 >
-                  Browse Investments
+                  Start Posting
                 </Link>
               </div>
             </div>
@@ -272,9 +226,9 @@ export default function Home() {
               <Image src="/logoo.png" alt="InfoPulse Logo" width={100} height={32} className="object-contain" />
             </div>
             <div className="flex items-center gap-6 text-sm text-gray-500">
-              <Link href="/investments" className="hover:text-green-600 transition-colors">Investments</Link>
-              <Link href="/business" className="hover:text-green-600 transition-colors">Business</Link>
-              <Link href="/poster/dashboard" className="hover:text-green-600 transition-colors">Post</Link>
+              <Link href="/poster/dashboard" className="hover:text-green-600 transition-colors">Dashboard</Link>
+              <Link href="/" className="hover:text-green-600 transition-colors">Feed</Link>
+              <Link href="/auth" className="hover:text-green-600 transition-colors">Sign In</Link>
             </div>
             <p className="text-xs text-gray-400">
               &copy; {new Date().getFullYear()} InfoPulse. All rights reserved.
