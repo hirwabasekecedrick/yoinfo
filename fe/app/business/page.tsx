@@ -125,6 +125,7 @@ function BusinessPageContent() {
           <nav className="flex items-center gap-1 sm:gap-2">
             <Link href="/" className="text-sm font-medium text-gray-500 hover:text-green-600 px-2 sm:px-3 py-2 rounded-lg hover:bg-green-50 transition-colors">Home</Link>
             <Link href="/investments" className="text-sm font-medium text-gray-500 hover:text-green-600 px-2 sm:px-3 py-2 rounded-lg hover:bg-green-50 transition-colors hidden sm:block">Investments</Link>
+            <Link href="/messaging" className="text-sm font-medium text-gray-500 hover:text-green-600 px-2 sm:px-3 py-2 rounded-lg hover:bg-green-50 transition-colors hidden sm:block">Bulk Messaging</Link>
             <Link href="/poster/dashboard" className="text-sm font-medium text-gray-500 hover:text-green-600 px-2 sm:px-3 py-2 rounded-lg hover:bg-green-50 transition-colors hidden sm:block">Post</Link>
             {user ? (
               <Link href="/poster/dashboard" className="text-sm font-semibold bg-green-600 text-white px-4 sm:px-5 py-2 rounded-lg hover:bg-green-700 transition-colors shadow-sm shadow-green-200">Dashboard</Link>

@@ -12,6 +12,7 @@ import eventRoutes from "./routes/event.routes";
 import tagRoutes from "./routes/tag.routes";
 import investmentRoutes from "./routes/investment.routes";
 import businessRoutes from "./routes/business.routes";
+import messagingRoutes from "./routes/messaging.routes";
 
 const app = express();
 
@@ -34,5 +35,6 @@ app.use("/api/events", eventRoutes);
 app.use("/api/tags", tagRoutes);
 app.use("/api/investments", investmentRoutes);
 app.use("/api/businesses", businessRoutes);
+app.use("/api/messaging", messagingRoutes);
 
 export default app;

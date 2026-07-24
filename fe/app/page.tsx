@@ -101,9 +101,15 @@ export default function Home() {
           <nav className="flex items-center gap-2">
             <Link
               href="/investments"
-              className="text-sm font-medium text-gray-600 hover:text-green-600 px-3 py-2 rounded-lg hover:bg-green-50 transition-colors"
+              className="text-sm font-medium text-gray-500 hover:text-green-600 px-2 sm:px-3 py-2 rounded-lg hover:bg-green-50 transition-colors hidden sm:block"
             >
               Investments
+            </Link>
+            <Link
+              href="/messaging"
+              className="text-sm font-medium text-gray-500 hover:text-green-600 px-2 sm:px-3 py-2 rounded-lg hover:bg-green-50 transition-colors hidden sm:block"
+            >
+              Bulk Messaging
             </Link>
             <Link
               href="/business"
@@ -272,7 +278,12 @@ export default function Home() {
               <Image src="/logoo.png" alt="InfoPulse Logo" width={100} height={32} className="object-contain" />
             </div>
             <div className="flex items-center gap-6 text-sm text-gray-500">
-              <Link href="/investments" className="hover:text-green-600 transition-colors">Investments</Link>
+              <li>
+                <Link href="/investments" className="hover:text-green-600 transition-colors">Investments</Link>
+              </li>
+              <li>
+                <Link href="/messaging" className="hover:text-green-600 transition-colors">Bulk Messaging</Link>
+              </li>
               <Link href="/business" className="hover:text-green-600 transition-colors">Business</Link>
               <Link href="/poster/dashboard" className="hover:text-green-600 transition-colors">Post</Link>
             </div>

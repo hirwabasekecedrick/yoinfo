@@ -18,6 +18,7 @@ model User {
   posts     Post[]
   investments Investment[]
   businesses Business[]
+  campaigns Campaign[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -137,4 +138,18 @@ enum Role {
   USER
   POSTER
   ADMIN
+}
+
+model Campaign {
+  id          String   @id @default(uuid())
+  name        String
+  message     String
+  channels    String[] // e.g., ["EMAIL", "SMS"]
+  status      String   @default("SENT") // SENT, FAILED, SCHEDULED
+  recipients  Int      @default(0)
+  cost        Float    @default(0)
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
