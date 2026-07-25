@@ -23,7 +23,7 @@ export default function Home() {
               Blast
             </Link>
             <Link href="/poster/dashboard" className="text-sm font-medium text-gray-500 hover:text-[#C1027D] px-2 sm:px-3 py-2 rounded-lg hover:bg-[#FBEAF5] transition-colors hidden sm:block">
-              Post
+              Social Media Automation
             </Link>
             <Link
               href="/auth"

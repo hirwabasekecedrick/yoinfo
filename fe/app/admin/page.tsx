@@ -80,7 +80,7 @@ export default function AdminDashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <span className="font-semibold text-sm text-neutral-900 dark:text-neutral-100">InfoPulse</span>
+            <span className="font-semibold text-sm text-neutral-900 dark:text-neutral-100">yoInfo</span>
           </Link>
         </div>
 

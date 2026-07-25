@@ -421,8 +421,8 @@ const USERS = [
     role: 'USER' as const,
   },
   {
-    email: 'admin@infopulse.rw',
-    name: 'InfoPulse Admin',
+    email: 'admin@yoinfo.rw',
+    name: 'yoInfo Admin',
     password: 'admin123',
     role: 'ADMIN' as const,
   },
@@ -431,7 +431,7 @@ const USERS = [
 const POSTS = [
   {
     authorIndex: 0,
-    content: 'Just joined InfoPulse! Excited to share my latest UI designs here. The green and white theme is absolutely stunning! ✨',
+    content: 'Just joined yoInfo! Excited to share my latest UI designs here. The green and white theme is absolutely stunning! ✨',
     tagNames: ['teknoloji', 'design', 'innovation'],
   },
   {
@@ -451,7 +451,7 @@ const POSTS = [
   },
   {
     authorIndex: 3,
-    content: 'Welcome to InfoPulse! We are building the platform for Rwandan news, business, and investment opportunities. Stay tuned for exciting updates.',
+    content: 'Welcome to yoInfo! We are building the platform for Rwandan news, business, and investment opportunities. Stay tuned for exciting updates.',
     tagNames: ['amakuru', 'news', 'rwanda'],
   },
 ];

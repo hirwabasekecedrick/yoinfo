@@ -51,6 +51,60 @@ export default function MessagingDashboard() {
 
   // Campaigns (fetched from backend)
   const [campaigns, setCampaigns] = useState<{ id: string; name: string; status: string; recipients: number; channels: string[]; date: string }[]>([]);
+  const [campaignsPage, setCampaignsPage] = useState(1);
+  const CAMPAIGNS_PER_PAGE = 5;
+
+  // Toast notification
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const showToast = (message: string, type: 'success' | 'error' = 'error') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  // Derived stats from real campaign data
+  const totalCampaigns = campaigns.length;
+  const totalRecipients = campaigns.reduce((sum, c) => sum + c.recipients, 0);
+  const activeCampaigns = campaigns.filter(c => c.status === 'sent' || c.status === 'active' || c.status === 'running').length;
+  const allChannels = [...new Set(campaigns.flatMap(c => c.channels))];
+
+  const campaignsTotalPages = Math.max(1, Math.ceil(campaigns.length / CAMPAIGNS_PER_PAGE));
+  const campaignsPageData = campaigns.slice((campaignsPage - 1) * CAMPAIGNS_PER_PAGE, campaignsPage * CAMPAIGNS_PER_PAGE);
+
+  const CampaignPagination = ({ totalPages, page, setPage }: { totalPages: number; page: number; setPage: (p: number) => void }) => {
+    if (totalPages <= 1) return null;
+    return (
+      <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+        <span className="text-xs text-gray-400">Page {page} of {totalPages}</span>
+        <div className="flex gap-1.5">
+          <button
+            onClick={() => setPage(Math.max(1, page - 1))}
+            disabled={page === 1}
+            className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            Prev
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+            <button
+              key={p}
+              onClick={() => setPage(p)}
+              className={`w-8 h-8 text-xs font-semibold rounded-lg transition-colors ${
+                p === page ? 'bg-[#C1027D] text-white' : 'border border-gray-200 text-gray-500 hover:bg-gray-50'
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+          <button
+            onClick={() => setPage(Math.min(totalPages, page + 1))}
+            disabled={page === totalPages}
+            className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -103,7 +157,7 @@ export default function MessagingDashboard() {
         }));
         setContacts(parsed);
       } catch {
-        alert('Could not read file');
+        showToast('Could not read file', 'error');
       }
     };
     reader.readAsArrayBuffer(file);
@@ -113,6 +167,10 @@ export default function MessagingDashboard() {
     if (!addName || (!addPhone && !addEmail)) return;
     setContacts(prev => [...prev, { name: addName, phone: addPhone, email: addEmail }]);
     setAddName(''); setAddPhone(''); setAddEmail('');
+  };
+
+  const removeContact = (index: number) => {
+    setContacts(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleFileUploadForLink = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,8 +183,9 @@ export default function MessagingDashboard() {
       const result = await uploadAttachment(token, file);
       setFileUrl(result.url);
       setFileName(file.name);
+      showToast('File uploaded successfully!', 'success');
     } catch (err: any) {
-      alert(err.message || 'Failed to upload file');
+      showToast(err.message || 'Failed to upload file', 'error');
     } finally {
       setIsUploadingFile(false);
     }
@@ -143,7 +202,7 @@ export default function MessagingDashboard() {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        alert('You must be logged in to send campaigns.');
+        showToast('You must be logged in to send campaigns.', 'error');
         return;
       }
       const activeChannels = Object.entries(channels).filter(([, v]) => v).map(([k]) => k.toUpperCase());
@@ -152,8 +211,8 @@ export default function MessagingDashboard() {
         name: campaignName,
         emailSubject,
         emailMessage: emailMessage + fileLink,
-        smsMessage: smsMessage + fileLink,
-        whatsappMessage: whatsappMessage + fileLink,
+        smsMessage,
+        whatsappMessage,
         contacts,
         channels: activeChannels,
         cost: contacts.length * 20,
@@ -176,7 +235,7 @@ export default function MessagingDashboard() {
         .catch(() => {});
       setTimeout(() => { setSendSuccess(false); setView('dashboard'); resetForm(); }, 2000);
     } catch (err: any) {
-      alert(err.message || 'Error sending campaign');
+      showToast(err.message || 'Error sending campaign', 'error');
     } finally {
       setIsSending(false);
     }
@@ -211,7 +270,7 @@ export default function MessagingDashboard() {
               ]).map(item => (
                 <button
                   key={item.id}
-                  onClick={() => { setView(item.id); if (item.id === 'new-campaign') { resetForm(); setStep(0); } }}
+                  onClick={() => { setView(item.id); if (item.id === 'new-campaign') { resetForm(); setStep(0); } if (item.id === 'campaigns') setCampaignsPage(1); }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     view === item.id
                       ? 'bg-[#C1027D]/10 text-[#C1027D]'
@@ -233,61 +292,121 @@ export default function MessagingDashboard() {
             {/* ═══ DASHBOARD ═══ */}
             {view === 'dashboard' && (
               <div className="space-y-6 animate-fade-in-up">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Hero Banner */}
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#C1027D] via-[#A0026E] to-[#6B0148] p-6 lg:p-8 text-white">
+                  <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/5 rounded-full blur-2xl" />
+                  <div className="absolute -bottom-8 -left-8 w-36 h-36 bg-white/5 rounded-full blur-2xl" />
+                  <div className="relative z-10">
+                    <p className="text-white/60 text-xs font-semibold uppercase tracking-widest mb-1">Blast Wizard</p>
+                    <h2 className="text-xl lg:text-2xl font-bold mb-2">Send smarter, reach faster.</h2>
+                    <p className="text-white/70 text-sm max-w-md mb-5">Upload contacts, compose once, and blast across Email, SMS & WhatsApp — all from one place.</p>
+                    <button
+                      onClick={() => { setView('new-campaign'); resetForm(); setStep(0); }}
+                      className="inline-flex items-center gap-2 bg-white text-[#C1027D] font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-white/90 transition-colors shadow-lg shadow-black/10"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                      </svg>
+                      New Campaign
+                    </button>
+                  </div>
+                </div>
+
+                {/* Stat Cards */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
                   {[
-                    { label: 'Messages', value: '12.5K', sub: '+2.1K this month', color: 'from-[#C1027D] to-[#8A0260]', icon: '✉️' },
-                    { label: 'Channels', value: '3', sub: 'Email, SMS, WhatsApp', color: 'from-[#E97BC4] to-[#C1027D]', icon: '📡' },
-                    { label: 'Active', value: '24', sub: 'Running campaigns', color: 'from-[#D93F9E] to-[#C1027D]', icon: '⚡' },
-                    { label: 'Spend', value: '$480', sub: 'This month', color: 'from-[#8A0260] to-[#3D0231]', icon: '💰' },
-                  ].map(stat => (
-                    <div key={stat.label} className="stat-card">
-                      <div className={`stat-icon bg-gradient-to-br ${stat.color} text-white text-base`}>{stat.icon}</div>
-                      <div>
-                        <div className="stat-value">{stat.value}</div>
-                        <div className="stat-label">{stat.sub}</div>
+                    { label: 'Campaigns', value: totalCampaigns.toLocaleString(), sub: `${activeCampaigns} active`, color: 'from-[#C1027D] to-[#8A0260]' },
+                    { label: 'Channels', value: String(allChannels.length || 3), sub: allChannels.length ? allChannels.join(', ') : 'Email, SMS, WhatsApp', color: 'from-[#E97BC4] to-[#C1027D]' },
+                    { label: 'Recipients', value: totalRecipients.toLocaleString(), sub: 'Total reached', color: 'from-[#D93F9E] to-[#C1027D]' },
+                    { label: 'Est. Spend', value: `${(totalRecipients * 20).toLocaleString()}`, sub: 'RWF total', color: 'from-[#8A0260] to-[#3D0231]' },
+                  ].map((stat, i) => (
+                    <div key={stat.label} className="group relative bg-white border border-[#f0e4ec] rounded-2xl p-4 lg:p-5 hover:shadow-lg hover:shadow-[#C1027D]/5 hover:border-[#C1027D]/20 transition-all duration-300">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center text-white shadow-lg shadow-[#C1027D]/15`}>
+                          {i === 0 && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" /></svg>}
+                          {i === 1 && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9.348 14.651a3.75 3.75 0 010-5.303m5.304 0a3.75 3.75 0 010 5.303m-7.425 2.122a6.75 6.75 0 010-9.546m9.546 0a6.75 6.75 0 010 9.546M5.106 18.894c-3.808-3.808-3.808-9.98 0-13.789m13.788 0c3.808 3.808 3.808 9.981 0 13.79M12 12h.008v.007H12V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>}
+                          {i === 2 && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>}
+                          {i === 3 && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" /></svg>}
+                        </div>
                       </div>
+                      <div className="text-2xl font-bold text-gray-900 tracking-tight">{stat.value}</div>
+                      <div className="text-xs font-medium text-gray-500 mt-0.5">{stat.label}</div>
+                      <div className="text-[11px] text-gray-400 mt-0.5">{stat.sub}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* Recent Campaigns */}
-                <div className="card">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-gray-900">Recent Campaigns</h3>
-                    <button onClick={() => setView('campaigns')} className="text-sm font-semibold text-[#C1027D] hover:text-[#8A0260]">View All</button>
+                <div className="bg-white border border-[#f0e4ec] rounded-2xl overflow-hidden">
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-[#f0e4ec]">
+                    <div>
+                      <h3 className="font-bold text-gray-900 text-sm">Recent Campaigns</h3>
+                      <p className="text-xs text-gray-400 mt-0.5">{campaigns.length} total</p>
+                    </div>
+                    <button onClick={() => { setView('campaigns'); setCampaignsPage(1); }} className="text-xs font-semibold text-[#C1027D] hover:text-[#8A0260] transition-colors px-3 py-1.5 rounded-lg hover:bg-[#FDF4FA]">View All</button>
                   </div>
-                  <div className="table-wrap">
-                    <table>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
                       <thead>
-                        <tr>
-                          <th>Campaign</th>
-                          <th>Status</th>
-                          <th>Recipients</th>
-                          <th>Channels</th>
-                          <th>Date</th>
+                        <tr className="border-b border-[#f0e4ec]">
+                          <th className="text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-5 py-3">Campaign</th>
+                          <th className="text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-5 py-3">Status</th>
+                          <th className="text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-5 py-3">Recipients</th>
+                          <th className="text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-5 py-3">Channels</th>
+                          <th className="text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-5 py-3">Date</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {campaigns.map(c => (
-                          <tr key={c.id}>
-                            <td className="font-semibold text-gray-900">{c.name}</td>
-                            <td><span className={`badge ${c.status === 'sent' ? 'success' : 'info'}`}>{c.status}</span></td>
-                            <td>{c.recipients.toLocaleString()}</td>
-                            <td>{c.channels.join(', ') || '—'}</td>
-                            <td className="text-gray-400">{c.date}</td>
+                        {campaignsPageData.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="text-center py-12">
+                              <div className="flex flex-col items-center gap-3">
+                                <div className="w-12 h-12 rounded-full bg-[#FDF4FA] flex items-center justify-center">
+                                  <svg className="w-6 h-6 text-[#E97BC4]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" />
+                                  </svg>
+                                </div>
+                                <div className="text-center">
+                                  <p className="text-sm font-semibold text-gray-700">No campaigns yet</p>
+                                  <p className="text-xs text-gray-400 mt-0.5">Create your first campaign to get started</p>
+                                </div>
+                                <button onClick={() => { setView('new-campaign'); resetForm(); setStep(0); }} className="text-xs font-semibold text-[#C1027D] hover:text-[#8A0260] transition-colors mt-1">
+                                  Create Campaign →
+                                </button>
+                              </div>
+                            </td>
                           </tr>
-                        ))}
+                        ) : (
+                          campaignsPageData.map((c, i) => (
+                            <tr key={c.id} className={`hover:bg-[#FDF4FA]/50 transition-colors ${i < campaignsPageData.length - 1 ? 'border-b border-[#f0e4ec]/50' : ''}`}>
+                              <td className="px-5 py-3.5">
+                                <span className="text-sm font-semibold text-gray-900">{c.name}</span>
+                              </td>
+                              <td className="px-5 py-3.5">
+                                <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${c.status === 'sent' ? 'bg-emerald-50 text-emerald-700' : c.status === 'active' || c.status === 'running' ? 'bg-blue-50 text-blue-700' : 'bg-gray-50 text-gray-600'}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${c.status === 'sent' ? 'bg-emerald-500' : c.status === 'active' || c.status === 'running' ? 'bg-blue-500' : 'bg-gray-400'}`} />
+                                  {c.status}
+                                </span>
+                              </td>
+                              <td className="px-5 py-3.5 text-sm text-gray-600">{c.recipients.toLocaleString()}</td>
+                              <td className="px-5 py-3.5">
+                                <div className="flex gap-1">
+                                  {c.channels.map(ch => (
+                                    <span key={ch} className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${
+                                      ch === 'EMAIL' ? 'bg-blue-50 text-blue-600' : ch === 'SMS' ? 'bg-amber-50 text-amber-600' : 'bg-green-50 text-green-600'
+                                    }`}>{ch}</span>
+                                  ))}
+                                </div>
+                              </td>
+                              <td className="px-5 py-3.5 text-xs text-gray-400">{c.date}</td>
+                            </tr>
+                          ))
+                        )}
                       </tbody>
                     </table>
                   </div>
+                  <CampaignPagination totalPages={campaignsTotalPages} page={campaignsPage} setPage={setCampaignsPage} />
                 </div>
-
-                <button onClick={() => { setView('new-campaign'); resetForm(); setStep(0); }} className="btn btn-primary">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                  </svg>
-                  New Campaign
-                </button>
               </div>
             )}
 
@@ -334,11 +453,18 @@ export default function MessagingDashboard() {
                     {contacts.length > 0 && (
                       <div className="text-sm font-bold text-[#C1027D]">
                         Loaded {contacts.length} contacts
-                        <div className="mt-2 max-h-32 overflow-y-auto">
-                          {contacts.slice(0, 5).map((c, i) => (
-                            <div key={i} className="text-xs text-gray-500 font-normal">{c.name} — {c.phone || c.email}</div>
+                        <div className="mt-2 max-h-40 overflow-y-auto space-y-1">
+                          {contacts.slice(0, 10).map((c, i) => (
+                            <div key={i} className="flex items-center justify-between text-xs text-gray-500 font-normal py-1 px-2 rounded hover:bg-gray-50">
+                              <span>{c.name || 'Unnamed'} — {c.phone || c.email}</span>
+                              <button onClick={() => removeContact(i)} className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0 ml-2">
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
                           ))}
-                          {contacts.length > 5 && <div className="text-xs text-gray-400">...and {contacts.length - 5} more</div>}
+                          {contacts.length > 10 && <div className="text-xs text-gray-400 pl-2">...and {contacts.length - 10} more</div>}
                         </div>
                       </div>
                     )}
@@ -438,7 +564,7 @@ export default function MessagingDashboard() {
                         </div>
                         <div>
                           <h3 className="font-bold text-gray-900 text-sm">Attach a File (Optional)</h3>
-                          <p className="text-xs text-gray-400">Upload a file and a download link will be included in the message</p>
+                          <p className="text-xs text-gray-400">Upload a file and a download link will be included in the email</p>
                         </div>
                       </div>
 
@@ -451,7 +577,12 @@ export default function MessagingDashboard() {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                           </svg>
                           <p className="text-sm font-semibold text-gray-600">
-                            {isUploadingFile ? 'Uploading...' : 'Click to upload a file'}
+                            {isUploadingFile ? (
+                              <span className="flex items-center justify-center gap-2">
+                                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                                Uploading...
+                              </span>
+                            ) : 'Click to upload a file'}
                           </p>
                           <p className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, XLS, XLSX, CSV, images — up to 25MB</p>
                           <input
@@ -676,8 +807,8 @@ export default function MessagingDashboard() {
                       </div>
                       {fileUrl && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-500">File</span>
-                          <span className="font-semibold text-[#C1027D] truncate ml-4 max-w-[200px]">{fileName}</span>
+                          <span className="text-gray-500">Attachment</span>
+                          <span className="font-semibold text-[#C1027D] truncate ml-4 max-w-[200px]">{fileName} <span className="text-xs text-gray-400">(email only)</span></span>
                         </div>
                       )}
                       <div className="flex justify-between text-sm">
@@ -699,10 +830,10 @@ export default function MessagingDashboard() {
                       <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
                         <div className="section-heading text-amber-600">SMS Content</div>
                         <div className="text-xs text-gray-500 mb-1">
-                          {smsMessage.length}{fileUrl ? ` + link` : ''} chars
+                          {smsMessage.length} chars
                           {smsMessage.length > 160 && <span className="text-red-500"> — {Math.ceil(smsMessage.length / 160)} segments</span>}
                         </div>
-                        <p className="text-sm text-gray-600 whitespace-pre-wrap">{smsMessage}{fileUrl ? `\n\nDownload file: ${API_URL}${fileUrl}` : ''}</p>
+                        <p className="text-sm text-gray-600 whitespace-pre-wrap">{smsMessage}</p>
                       </div>
                     )}
 
@@ -738,18 +869,25 @@ export default function MessagingDashboard() {
                       <tr><th>Campaign</th><th>Status</th><th>Recipients</th><th>Channels</th><th>Date</th></tr>
                     </thead>
                     <tbody>
-                      {campaigns.map(c => (
-                        <tr key={c.id}>
-                          <td className="font-semibold text-gray-900">{c.name}</td>
-                          <td><span className={`badge ${c.status === 'sent' ? 'success' : 'info'}`}>{c.status}</span></td>
-                          <td>{c.recipients.toLocaleString()}</td>
-                          <td>{c.channels.join(', ') || '—'}</td>
-                          <td className="text-gray-400">{c.date}</td>
+                      {campaignsPageData.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="text-center py-8 text-gray-400 text-sm">No campaigns found.</td>
                         </tr>
-                      ))}
+                      ) : (
+                        campaignsPageData.map(c => (
+                          <tr key={c.id}>
+                            <td className="font-semibold text-gray-900">{c.name}</td>
+                            <td><span className={`badge ${c.status === 'sent' ? 'success' : 'info'}`}>{c.status}</span></td>
+                            <td>{c.recipients.toLocaleString()}</td>
+                            <td>{c.channels.join(', ') || '—'}</td>
+                            <td className="text-gray-400">{c.date}</td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
+                <CampaignPagination totalPages={campaignsTotalPages} page={campaignsPage} setPage={setCampaignsPage} />
               </div>
             )}
 
@@ -880,7 +1018,12 @@ export default function MessagingDashboard() {
                   disabled={!agreedToTerms || isSending}
                   className="btn btn-primary flex-[2] disabled:opacity-40"
                 >
-                  {isSending ? 'Sending...' : 'Pay & Send'}
+                  {isSending ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                      Sending...
+                    </span>
+                  ) : 'Pay & Send'}
                   {!isSending && (
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
@@ -889,6 +1032,15 @@ export default function MessagingDashboard() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ── Toast Notification ──────────────────────────── */}
+        {toast && (
+          <div className={`fixed bottom-24 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl shadow-lg font-semibold text-sm animate-fade-in-up z-50 ${
+            toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'
+          }`}>
+            {toast.message}
           </div>
         )}
 

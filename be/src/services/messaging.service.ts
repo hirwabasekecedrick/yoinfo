@@ -195,7 +195,7 @@ export const messagingService = {
       const personalizedText = text.replace('{name}', r.name || 'Customer');
       const personalizedSubject = subject.replace('{name}', r.name || 'Customer');
       return transporter.sendMail({
-        from: process.env.EMAIL_FROM || '"InfoPulse Bulk" <no-reply@infopulse.com>',
+        from: process.env.EMAIL_FROM || '"yoInfo Bulk" <no-reply@yoinfo.com>',
         to: r.email,
         subject: personalizedSubject,
         text: personalizedText,

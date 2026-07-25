@@ -307,7 +307,7 @@ async function main() {
   // Create sample posts
   await prisma.post.create({
     data: {
-      content: 'Just joined InfoPulse! Excited to share updates and connect with the community.',
+      content: 'Just joined yoInfo! Excited to share updates and connect with the community.',
       authorId: poster1.id,
     },
   });

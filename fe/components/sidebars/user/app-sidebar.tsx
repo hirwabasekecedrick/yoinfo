@@ -173,10 +173,10 @@ export function UserSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) 
             <SidebarMenuButton size="lg" asChild>
               <a href="#">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground overflow-hidden">
-                  <Image src="/logoo.png" alt="InfoPulse Logo" width={32} height={32} className="object-contain" />
+                  <Image src="/logoo.png" alt="yoInfo Logo" width={32} height={32} className="object-contain" />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-medium">InfoPulse</span>
+                  <span className="font-medium">yoInfo</span>
                 </div>
               </a>
             </SidebarMenuButton>
