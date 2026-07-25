@@ -52,11 +52,10 @@ export default function PosterDashboard() {
     const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     if (!token || !storedUser) { router.push('/auth'); return; }
-    setUser(JSON.parse(storedUser));
     fetchPosts().then(setPosts).catch(console.error).finally(() => setLoadingPosts(false));
   }, [router]);
 
-  useEffect(() => { fetchTags().then(setTags).catch(console.error); fetchEvents().then(setEvents).catch(console.error); }, []);
+  useEffect(() => { fetchTags().then(setTags).catch(console.error); }, []);
 
   const handleImageSelect = (file: File | null) => {
     if (!file || !['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) return;
