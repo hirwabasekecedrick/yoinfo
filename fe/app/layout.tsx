@@ -9,9 +9,9 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "InfoPulse",
+  title: "yoInfo — Update. Publish. Blast.",
   description:
-    "Discover investment opportunities, share updates, and grow your business with InfoPulse.",
+    "Share updates instantly — everywhere, all at once. Blast to WhatsApp, SMS, and email from one place.",
 };
 
 export default function RootLayout({

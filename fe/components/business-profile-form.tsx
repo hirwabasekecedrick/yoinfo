@@ -151,7 +151,7 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
   return (
     <div className="space-y-6">
       {/* Step Navigation */}
-      <div className="bg-white border border-green-100 rounded-2xl p-4">
+      <div className="bg-white border border-[#D93F9E]/10 rounded-2xl p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-bold text-gray-900">Profile Sections</h3>
           <span className="text-xs text-gray-400">{Object.keys(completedSteps).length}/{FORM_STEPS.length} done</span>
@@ -166,9 +166,9 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
                 onClick={() => setCurrentStep(step.id)}
                 className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                   isActive
-                    ? 'bg-green-600 text-white shadow-md shadow-green-200'
+                    ? 'bg-[#C1027D] text-white shadow-md shadow-[#D93F9E]/20'
                     : isComplete
-                    ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
+                    ? 'bg-[#D93F9E]/5 text-[#C1027D] border border-[#D93F9E]/20 hover:bg-[#D93F9E]/10'
                     : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-gray-100'
                 }`}
               >
@@ -189,7 +189,7 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
       </div>
 
       {/* Form Content */}
-      <div className="bg-white border border-green-100 rounded-2xl p-6">
+      <div className="bg-white border border-[#D93F9E]/10 rounded-2xl p-6">
         {currentStep === 'basic' && (
           <div className="space-y-5">
             <div>
@@ -204,7 +204,7 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
                 value={name}
                 onChange={e => setName(e.target.value)}
                 placeholder="Your business name"
-                className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2.5 rounded-xl border border-[#D93F9E]/20 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1027D]"
               />
             </div>
 
@@ -215,7 +215,7 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
                 value={tagline}
                 onChange={e => setTagline(e.target.value)}
                 placeholder="A short catchy phrase about your business"
-                className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2.5 rounded-xl border border-[#D93F9E]/20 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1027D]"
               />
             </div>
 
@@ -224,7 +224,7 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
               <select
                 value={category}
                 onChange={e => setCategory(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2.5 rounded-xl border border-[#D93F9E]/20 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#C1027D]"
               >
                 <option value="">Select a category</option>
                 {BUSINESS_CATEGORIES.map(cat => (
@@ -240,7 +240,7 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
                 onChange={e => setDescription(e.target.value)}
                 placeholder="Describe what your business does, its mission, and what makes it unique..."
                 rows={4}
-                className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                className="w-full px-4 py-2.5 rounded-xl border border-[#D93F9E]/20 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1027D] resize-none"
               />
             </div>
 
@@ -252,7 +252,7 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
                   value={logo}
                   onChange={e => setLogo(e.target.value)}
                   placeholder="https://..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-2.5 rounded-xl border border-[#D93F9E]/20 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1027D]"
                 />
               </div>
               <div>
@@ -262,7 +262,7 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
                   value={coverImage}
                   onChange={e => setCoverImage(e.target.value)}
                   placeholder="https://..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-2.5 rounded-xl border border-[#D93F9E]/20 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1027D]"
                 />
               </div>
             </div>
@@ -279,32 +279,32 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">Phone</label>
-                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+250 788 000 000" className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" />
+                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+250 788 000 000" className="w-full px-4 py-2.5 rounded-xl border border-[#D93F9E]/20 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1027D]" />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="hello@business.com" className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="hello@business.com" className="w-full px-4 py-2.5 rounded-xl border border-[#D93F9E]/20 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1027D]" />
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Website</label>
-              <input type="url" value={website} onChange={e => setWebsite(e.target.value)} placeholder="https://yourbusiness.com" className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" />
+              <input type="url" value={website} onChange={e => setWebsite(e.target.value)} placeholder="https://yourbusiness.com" className="w-full px-4 py-2.5 rounded-xl border border-[#D93F9E]/20 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1027D]" />
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Address</label>
-              <input type="text" value={address} onChange={e => setAddress(e.target.value)} placeholder="Street address" className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" />
+              <input type="text" value={address} onChange={e => setAddress(e.target.value)} placeholder="Street address" className="w-full px-4 py-2.5 rounded-xl border border-[#D93F9E]/20 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1027D]" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">City</label>
-                <input type="text" value={city} onChange={e => setCity(e.target.value)} placeholder="City" className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" />
+                <input type="text" value={city} onChange={e => setCity(e.target.value)} placeholder="City" className="w-full px-4 py-2.5 rounded-xl border border-[#D93F9E]/20 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1027D]" />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">Country</label>
-                <input type="text" value={country} onChange={e => setCountry(e.target.value)} placeholder="Country" className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" />
+                <input type="text" value={country} onChange={e => setCountry(e.target.value)} placeholder="Country" className="w-full px-4 py-2.5 rounded-xl border border-[#D93F9E]/20 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1027D]" />
               </div>
             </div>
           </div>
@@ -319,17 +319,17 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Registration Number</label>
-              <input type="text" value={registrationNumber} onChange={e => setRegistrationNumber(e.target.value)} placeholder="Business registration number" className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" />
+              <input type="text" value={registrationNumber} onChange={e => setRegistrationNumber(e.target.value)} placeholder="Business registration number" className="w-full px-4 py-2.5 rounded-xl border border-[#D93F9E]/20 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1027D]" />
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Tax ID</label>
-              <input type="text" value={taxId} onChange={e => setTaxId(e.target.value)} placeholder="Tax identification number" className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" />
+              <input type="text" value={taxId} onChange={e => setTaxId(e.target.value)} placeholder="Tax identification number" className="w-full px-4 py-2.5 rounded-xl border border-[#D93F9E]/20 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1027D]" />
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Certifications</label>
-              <textarea value={certifications} onChange={e => setCertifications(e.target.value)} placeholder="List any relevant certifications, licenses, or awards..." rows={3} className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 resize-none" />
+              <textarea value={certifications} onChange={e => setCertifications(e.target.value)} placeholder="List any relevant certifications, licenses, or awards..." rows={3} className="w-full px-4 py-2.5 rounded-xl border border-[#D93F9E]/20 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1027D] resize-none" />
             </div>
           </div>
         )}
@@ -347,13 +347,13 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
                 value={newService}
                 onChange={e => setNewService(e.target.value)}
                 placeholder="Add a service or product"
-                className="flex-1 px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="flex-1 px-4 py-2.5 rounded-xl border border-[#D93F9E]/20 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1027D]"
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddService(); } }}
               />
               <button
                 onClick={handleAddService}
                 disabled={!newService.trim()}
-                className="px-5 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors disabled:opacity-40"
+                className="px-5 py-2.5 rounded-xl bg-[#C1027D] text-white text-sm font-semibold hover:bg-[#8A0260] transition-colors disabled:opacity-40"
               >
                 Add
               </button>
@@ -362,9 +362,9 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
             {services.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {services.map((service) => (
-                  <span key={service} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 text-sm font-medium text-green-700 border border-green-200">
+                  <span key={service} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#D93F9E]/5 text-sm font-medium text-[#C1027D] border border-[#D93F9E]/20">
                     {service}
-                    <button onClick={() => handleRemoveService(service)} className="text-green-400 hover:text-red-500 transition-colors">
+                    <button onClick={() => handleRemoveService(service)} className="text-[#D93F9E]/40 hover:text-red-500 transition-colors">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                       </svg>
@@ -389,7 +389,7 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
 
             <div className="space-y-3">
               {DAYS.map((day) => (
-                <div key={day} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-green-100">
+                <div key={day} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-[#D93F9E]/10">
                   <span className="w-24 text-sm font-semibold text-gray-700">{day}</span>
                   {hours[day].closed ? (
                     <span className="text-sm text-gray-400 italic">Closed</span>
@@ -399,14 +399,14 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
                         type="time"
                         value={hours[day].open}
                         onChange={e => updateHours(day, 'open', e.target.value)}
-                        className="px-3 py-1.5 rounded-lg border border-green-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="px-3 py-1.5 rounded-lg border border-[#D93F9E]/20 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#C1027D]"
                       />
                       <span className="text-gray-400 text-sm">to</span>
                       <input
                         type="time"
                         value={hours[day].close}
                         onChange={e => updateHours(day, 'close', e.target.value)}
-                        className="px-3 py-1.5 rounded-lg border border-green-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="px-3 py-1.5 rounded-lg border border-[#D93F9E]/20 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#C1027D]"
                       />
                     </div>
                   )}
@@ -415,7 +415,7 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
                     className={`ml-auto px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
                       hours[day].closed
                         ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
-                        : 'bg-green-50 text-green-600 border border-green-200 hover:bg-green-100'
+                        : 'bg-[#D93F9E]/5 text-[#C1027D] border border-[#D93F9E]/20 hover:bg-[#D93F9E]/10'
                     }`}
                   >
                     {hours[day].closed ? 'Mark Open' : 'Mark Closed'}
@@ -440,8 +440,8 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
                   onClick={() => setPrimaryCTA(action)}
                   className={`px-3 py-2.5 rounded-xl text-sm font-semibold border transition-all text-left ${
                     primaryCTA === action
-                      ? 'bg-green-600 text-white border-green-600 shadow-sm shadow-green-200'
-                      : 'bg-white text-gray-600 border-green-200 hover:border-green-400 hover:bg-green-50'
+                      ? 'bg-[#C1027D] text-white border-[#C1027D] shadow-sm shadow-[#D93F9E]/20'
+                      : 'bg-white text-gray-600 border-[#D93F9E]/20 hover:border-[#D93F9E]/40 hover:bg-[#D93F9E]/5'
                   }`}
                 >
                   {action}
@@ -464,19 +464,19 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
                 value={newMemberName}
                 onChange={e => setNewMemberName(e.target.value)}
                 placeholder="Name"
-                className="flex-1 px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="flex-1 px-4 py-2.5 rounded-xl border border-[#D93F9E]/20 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1027D]"
               />
               <input
                 type="text"
                 value={newMemberRole}
                 onChange={e => setNewMemberRole(e.target.value)}
                 placeholder="Role"
-                className="flex-1 px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="flex-1 px-4 py-2.5 rounded-xl border border-[#D93F9E]/20 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1027D]"
               />
               <button
                 onClick={handleAddTeamMember}
                 disabled={!newMemberName.trim() || !newMemberRole.trim()}
-                className="px-5 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors disabled:opacity-40"
+                className="px-5 py-2.5 rounded-xl bg-[#C1027D] text-white text-sm font-semibold hover:bg-[#8A0260] transition-colors disabled:opacity-40"
               >
                 Add
               </button>
@@ -485,8 +485,8 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
             {teamMembers.length > 0 && (
               <div className="space-y-2">
                 {teamMembers.map((member, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-green-50 border border-green-200">
-                    <div className="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-[#D93F9E]/5 border border-[#D93F9E]/20">
+                    <div className="w-10 h-10 rounded-full bg-[#C1027D] text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
                       {member.name[0]?.toUpperCase()}
                     </div>
                     <div className="flex-1">
@@ -510,7 +510,7 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
         )}
 
         {/* Navigation */}
-        <div className="flex items-center justify-between pt-6 mt-6 border-t border-green-100">
+        <div className="flex items-center justify-between pt-6 mt-6 border-t border-[#D93F9E]/10">
           <div className="flex gap-2">
             <button
               onClick={onCancel}
@@ -538,7 +538,7 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
                   const idx = FORM_STEPS.findIndex(s => s.id === currentStep);
                   setCurrentStep(FORM_STEPS[idx + 1].id);
                 }}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 transition-all shadow-sm shadow-green-200"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#C1027D] text-white text-sm font-bold hover:bg-[#8A0260] transition-all shadow-sm shadow-[#D93F9E]/20"
               >
                 Next Section
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -549,7 +549,7 @@ export default function BusinessProfileForm({ onSave, onCancel }: BusinessProfil
               <button
                 onClick={() => { markComplete(currentStep); handleSave(); }}
                 disabled={!name.trim()}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 transition-all disabled:opacity-40 shadow-lg shadow-green-200"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#C1027D] text-white text-sm font-bold hover:bg-[#8A0260] transition-all disabled:opacity-40 shadow-lg shadow-[#D93F9E]/20"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />

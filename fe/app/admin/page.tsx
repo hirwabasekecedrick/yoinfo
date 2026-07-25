@@ -7,7 +7,6 @@ import Link from 'next/link';
 const API_URL = 'https://infopulse-be.onrender.com/';
 
 type Post = { id: string; content: string; imageUrl?: string; createdAt: string; author: { id: string; name: string; email: string } };
-type User = { id: string; name: string; email: string; role: string; createdAt: string };
 
 const NAV_ITEMS = [
   { label: 'Overview', key: 'overview', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
@@ -18,7 +17,6 @@ const NAV_ITEMS = [
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [posts, setPosts] = useState<Post[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
   const [adminUser, setAdminUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();

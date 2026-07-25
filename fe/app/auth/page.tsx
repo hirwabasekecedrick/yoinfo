@@ -4,13 +4,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { login, register } from '@/lib/api';
 import Link from 'next/link';
-import Image from 'next/image';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -41,167 +41,198 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Left Panel — Brand */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-green-600 to-emerald-700 p-12 flex-col justify-between relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
-
-        <div className="relative z-10">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="h-10 overflow-hidden">
-              <Image src="/logoo.png" alt="InfoPulse Logo" width={120} height={40} className="object-contain" />
-            </div>
+    <div className="min-h-screen bg-[#FBF6F9] flex flex-col">
+      {/* ── Top Nav ─────────────────────────────────────── */}
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-[#f0e4ec]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <img src="/YoINFOlogo.png" alt="yoInfo" className="h-8" />
           </Link>
+          <nav className="flex items-center gap-2">
+            <Link href="/" className="text-sm font-medium text-gray-500 hover:text-[#C1027D] px-3 py-2 rounded-lg hover:bg-[#FBEAF5] transition-colors">
+              Home
+            </Link>
+          </nav>
         </div>
+      </header>
 
-        <div className="relative z-10">
-          <blockquote className="text-white/90 text-xl leading-relaxed max-w-sm font-medium">
-            &ldquo;Invest. Publish. Grow. Your all-in-one platform for opportunities and business growth.&rdquo;
-          </blockquote>
-          <div className="flex items-center gap-6 mt-8">
-            <div>
-              <div className="text-2xl font-extrabold text-white">2,400+</div>
-              <div className="text-sm text-white/60">Investors</div>
+      {/* ── Auth Card ───────────────────────────────────── */}
+      <main className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-3xl border border-[#f0e4ec] shadow-xl shadow-[#C1027D]/5 p-8">
+            {/* Tab Switcher */}
+            <div className="flex bg-[#FDF4FA] rounded-2xl p-1 mb-8">
+              <button
+                onClick={() => { setIsLogin(true); setError(''); setSuccess(''); }}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  isLogin
+                    ? 'bg-white text-[#C1027D] shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Login
+              </button>
+              <button
+                onClick={() => { setIsLogin(false); setError(''); setSuccess(''); }}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  !isLogin
+                    ? 'bg-white text-[#C1027D] shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Register
+              </button>
             </div>
-            <div className="w-px h-10 bg-white/20" />
-            <div>
-              <div className="text-2xl font-extrabold text-white">850+</div>
-              <div className="text-sm text-white/60">Businesses</div>
-            </div>
-            <div className="w-px h-10 bg-white/20" />
-            <div>
-              <div className="text-2xl font-extrabold text-white">12K+</div>
-              <div className="text-sm text-white/60">Posts</div>
-            </div>
-          </div>
-          <p className="text-white/40 text-sm mt-6">
-            &copy; {new Date().getFullYear()} InfoPulse. All rights reserved.
-          </p>
-        </div>
-      </div>
 
-      {/* Right Panel — Form */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
-        <div className="w-full max-w-sm">
-          <Link href="/" className="lg:hidden flex items-center gap-2.5 mb-8">
-            <div className="h-10 overflow-hidden">
-              <Image src="/logoo.png" alt="InfoPulse Logo" width={120} height={40} className="object-contain" />
+            {/* Header */}
+            <div className="mb-6">
+              <h1 className="text-2xl font-extrabold text-gray-900 mb-1">
+                {isLogin ? 'Welcome back' : 'Create your account'}
+              </h1>
+              <p className="text-sm text-gray-500">
+                {isLogin ? 'Sign in to access your dashboard.' : 'Join yoInfo and start growing.'}
+              </p>
             </div>
-          </Link>
 
-          <div className="mb-8">
-            <h1 className="text-2xl font-extrabold text-gray-900 mb-1">
-              {isLogin ? 'Welcome back' : 'Create your account'}
-            </h1>
-            <p className="text-sm text-gray-500">
-              {isLogin ? 'Sign in to access your dashboard.' : 'Join InfoPulse and start growing.'}
-            </p>
-          </div>
-
-          {error && (
-            <div className="flex items-start gap-2.5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-5">
-              <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-              </svg>
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="flex items-start gap-2.5 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm mb-5">
-              <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {success}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
-              <div>
-                <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  Full Name
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full border border-green-200 bg-white text-gray-900 rounded-xl px-4 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                  placeholder="Jane Doe"
-                  required={!isLogin}
-                />
+            {/* Messages */}
+            {error && (
+              <div className="flex items-start gap-2.5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-5">
+                <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                </svg>
+                {error}
               </div>
             )}
-            <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1.5">
-                Email address
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-green-200 bg-white text-gray-900 rounded-xl px-4 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                placeholder="you@company.com"
-                required
-              />
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor="password" className="block text-sm font-semibold text-gray-700">
-                  Password
-                </label>
-                {isLogin && (
-                  <span className="text-xs text-gray-400">Min. 6 characters</span>
-                )}
+            {success && (
+              <div className="flex items-start gap-2.5 bg-[#D93F9E]/5 border border-[#D93F9E]/20 text-[#C1027D] px-4 py-3 rounded-xl text-sm mb-5">
+                <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {success}
               </div>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-green-200 bg-white text-gray-900 rounded-xl px-4 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
-                required
-                minLength={6}
-              />
-            </div>
+            )}
 
-            <button
-              id={isLogin ? 'btn-signin' : 'btn-register'}
-              type="submit"
-              disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed text-sm mt-2 shadow-lg shadow-green-200"
-            >
-              {isLoading ? (
-                <>
-                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  {isLogin ? 'Signing in...' : 'Creating account...'}
-                </>
-              ) : (
-                isLogin ? 'Sign In' : 'Create Account'
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {!isLogin && (
+                <div>
+                  <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Full Name
+                  </label>
+                  <input
+                    id="name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="input"
+                    placeholder="Jane Doe"
+                    required={!isLogin}
+                  />
+                </div>
               )}
-            </button>
-          </form>
 
-          <div className="mt-6 text-center">
-            <span className="text-sm text-gray-500">
-              {isLogin ? "Don't have an account? " : 'Already have an account? '}
-            </span>
-            <button
-              type="button"
-              onClick={() => { setIsLogin(!isLogin); setError(''); setSuccess(''); }}
-              className="text-sm font-semibold text-green-600 hover:text-green-700 transition-colors"
-            >
-              {isLogin ? 'Create one' : 'Sign in'}
-            </button>
+              {!isLogin && (
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Phone Number
+                  </label>
+                  <input
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="input"
+                    placeholder="+250 7XX XXX XXX"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Email address
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="input"
+                  placeholder="you@company.com"
+                  required
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label htmlFor="password" className="block text-sm font-semibold text-gray-700">
+                    Password
+                  </label>
+                  {isLogin && (
+                    <button type="button" className="text-xs text-[#C1027D] font-semibold hover:text-[#8A0260] transition-colors">
+                      Forgot password?
+                    </button>
+                  )}
+                </div>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="input"
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                />
+              </div>
+
+              {isLogin && (
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="remember" className="w-4 h-4 rounded border-[#f0e4ec] text-[#C1027D] focus:ring-[#C1027D]" />
+                  <label htmlFor="remember" className="text-sm text-gray-500">Remember me</label>
+                </div>
+              )}
+
+              <button
+                id={isLogin ? 'btn-signin' : 'btn-register'}
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 bg-[#C1027D] text-white font-bold py-3 rounded-xl hover:bg-[#8A0260] transition-all disabled:opacity-60 disabled:cursor-not-allowed text-sm mt-2 shadow-lg shadow-[#C1027D]/25"
+              >
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    {isLogin ? 'Signing in...' : 'Creating account...'}
+                  </>
+                ) : (
+                  <>
+                    {isLogin ? 'Login' : 'Create Account'}
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                    </svg>
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Switch */}
+            <div className="mt-6 text-center">
+              <span className="text-sm text-gray-500">
+                {isLogin ? "Don't have an account? " : 'Already have an account? '}
+              </span>
+              <button
+                type="button"
+                onClick={() => { setIsLogin(!isLogin); setError(''); setSuccess(''); }}
+                className="text-sm font-semibold text-[#C1027D] hover:text-[#8A0260] transition-colors"
+              >
+                {isLogin ? 'Create an account' : 'Sign in'}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

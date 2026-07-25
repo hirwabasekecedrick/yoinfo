@@ -81,7 +81,7 @@ export default function InvestmentFilters({ filters, onFilterChange, resultCount
             value={filters.search}
             onChange={e => update({ search: e.target.value })}
             placeholder="Search investments..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-green-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#f0e4ec] bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1027D] focus:border-transparent"
           />
         </div>
       </div>
@@ -96,12 +96,12 @@ export default function InvestmentFilters({ filters, onFilterChange, resultCount
               onClick={() => update({ category: cat })}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 filters.category === cat
-                  ? 'bg-green-600 text-white'
-                  : 'text-gray-600 hover:bg-green-50 hover:text-green-700'
+                  ? 'bg-[#C1027D] text-white'
+                  : 'text-gray-600 hover:bg-[#FBEAF5] hover:text-[#C1027D]'
               }`}
             >
               {cat !== 'All' && (
-                <svg className={`w-4 h-4 flex-shrink-0 ${filters.category === cat ? 'text-green-100' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <svg className={`w-4 h-4 flex-shrink-0 ${filters.category === cat ? 'text-[#D93F9E]' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d={CATEGORY_ICONS[cat] || ''} />
                 </svg>
               )}
@@ -122,8 +122,8 @@ export default function InvestmentFilters({ filters, onFilterChange, resultCount
               onClick={() => update({ status })}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                 filters.status === status
-                  ? 'bg-green-600 text-white border-green-600'
-                  : 'bg-white text-gray-600 border-green-200 hover:border-green-400'
+                  ? 'bg-[#C1027D] text-white border-[#C1027D]'
+                  : 'bg-white text-gray-600 border-[#f0e4ec] hover:border-[#E97BC4]'
               }`}
             >
               {status}
@@ -141,14 +141,14 @@ export default function InvestmentFilters({ filters, onFilterChange, resultCount
             value={filters.minBudget}
             onChange={e => update({ minBudget: e.target.value })}
             placeholder="Min"
-            className="w-1/2 px-3 py-2 rounded-xl border border-green-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-1/2 px-3 py-2 rounded-xl border border-[#f0e4ec] bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1027D]"
           />
           <input
             type="number"
             value={filters.maxBudget}
             onChange={e => update({ maxBudget: e.target.value })}
             placeholder="Max"
-            className="w-1/2 px-3 py-2 rounded-xl border border-green-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-1/2 px-3 py-2 rounded-xl border border-[#f0e4ec] bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C1027D]"
           />
         </div>
       </div>
@@ -169,7 +169,7 @@ export default function InvestmentFilters({ filters, onFilterChange, resultCount
       <div className="lg:hidden mb-4">
         <button
           onClick={() => setShowMobileFilters(!showMobileFilters)}
-          className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-white border border-green-200 text-sm font-semibold text-gray-700"
+          className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-white border border-[#f0e4ec] text-sm font-semibold text-gray-700"
         >
           <span className="flex items-center gap-2">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -177,10 +177,10 @@ export default function InvestmentFilters({ filters, onFilterChange, resultCount
             </svg>
             Filters
           </span>
-          <span className="text-xs text-green-600 font-bold">{resultCount} results</span>
+          <span className="text-xs text-[#C1027D] font-bold">{resultCount} results</span>
         </button>
         {showMobileFilters && (
-          <div className="mt-3 p-4 bg-white border border-green-200 rounded-xl animate-fade-in-down">
+          <div className="mt-3 p-4 bg-white border border-[#f0e4ec] rounded-xl animate-fade-in-down">
             {filterContent}
           </div>
         )}
@@ -188,10 +188,10 @@ export default function InvestmentFilters({ filters, onFilterChange, resultCount
 
       {/* Desktop sidebar */}
       <aside className="hidden lg:block w-64 flex-shrink-0">
-        <div className="sticky top-20 bg-white border border-green-100 rounded-2xl p-5">
+        <div className="sticky top-20 bg-white border border-[#f0e4ec] rounded-2xl p-5">
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-sm font-bold text-gray-900">Filters</h3>
-            <span className="text-xs text-green-600 font-bold">{resultCount} found</span>
+            <span className="text-xs text-[#C1027D] font-bold">{resultCount} found</span>
           </div>
           {filterContent}
         </div>

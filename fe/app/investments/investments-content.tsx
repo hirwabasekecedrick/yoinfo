@@ -1,334 +1,357 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { fetchInvestments, createInvestment, deleteInvestment } from '@/lib/api';
-import InvestmentCard from '@/components/investment-card';
-import InvestmentFilters, { type FilterState } from '@/components/investment-filters';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { fetchInvestments, fetchBusinesses, deleteInvestment } from '@/lib/api';
+import ToolLayout from '@/components/tool-layout';
 import ProtectedRoute from '@/components/protected-route';
 
-const INVESTMENT_CATEGORIES = [
-  'Real Estate', 'Technology', 'Agriculture', 'Energy', 'Finance',
-  'Healthcare', 'Education', 'Manufacturing', 'Tourism', 'Retail',
+const TOOL_NAV = [
+  { label: 'Dashboard', href: '/poster/dashboard', icon: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z' },
+  { label: 'Investments', href: '/investments', icon: 'M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941' },
+  { label: 'Blast', href: '/messaging', icon: 'M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.111.431-.173.869-.173 1.315 0 .447.062.884.173 1.315m0-9.665a24.301 24.301 0 003.484.045m-3.484 0a24.27 24.27 0 01-3.484-.045' },
 ];
 
-const INVESTMENT_STATUSES = ['Open', 'Closing Soon', 'Coming Soon'];
-
-const CTA_ACTIONS = [
-  'Explore Opportunity', 'Discover More', 'Get Started', 'Take Action Today', 'Request a Quote', 'Contact Us',
-];
+const CATEGORIES = ['All', 'Real Estate', 'Technology', 'Agriculture', 'Energy', 'Finance', 'Healthcare', 'Education', 'Manufacturing', 'Tourism', 'Retail'];
+const STATUSES = ['All', 'Open', 'Closing Soon', 'Coming Soon'];
 
 export default function InvestmentsContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   const [investments, setInvestments] = useState<any[]>([]);
+  const [businesses, setBusinesses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [deleteMessage, setDeleteMessage] = useState('');
-  const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  // Form state
-  const [formTitle, setFormTitle] = useState('');
-  const [formCategory, setFormCategory] = useState('');
-  const [formSummary, setFormSummary] = useState('');
-  const [formDescription, setFormDescription] = useState('');
-  const [formMinInvestment, setFormMinInvestment] = useState('');
-  const [formMaxInvestment, setFormMaxInvestment] = useState('');
-  const [formLocation, setFormLocation] = useState('');
-  const [formStatus, setFormStatus] = useState('Open');
-  const [formRoi, setFormRoi] = useState('');
-  const [formImageUrl, setFormImageUrl] = useState('');
-  const [formSubmitting, setFormSubmitting] = useState(false);
-
-  // Filters from URL params
-  const [filters, setFilters] = useState<FilterState>({
-    search: searchParams.get('search') || '',
-    category: (searchParams.get('category') as any) || 'All',
-    status: (searchParams.get('status') as any) || 'All',
-    minBudget: searchParams.get('minBudget') || '',
-    maxBudget: searchParams.get('maxBudget') || '',
-  });
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'All');
+  const [selectedStatus, setSelectedStatus] = useState('All');
+  const [search, setSearch] = useState(searchParams.get('search') || '');
+  const [budgetRange, setBudgetRange] = useState<[string, string]>(['', '']);
+  const [selectedInvestment, setSelectedInvestment] = useState<any | null>(null);
+  const [activeTab, setActiveTab] = useState<'opportunities' | 'directory'>('opportunities');
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
-    if (token && storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    if (storedUser) setUser(JSON.parse(storedUser));
   }, []);
 
-  // Fetch investments when filters change
   useEffect(() => {
     setLoading(true);
-    fetchInvestments(filters)
+    fetchInvestments({ category: selectedCategory, status: selectedStatus, search: search || undefined })
       .then(setInvestments)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [filters]);
+  }, [selectedCategory, selectedStatus, search]);
 
-  // Update URL when filters change
-  const updateURL = useCallback((newFilters: FilterState) => {
-    const params = new URLSearchParams();
-    if (newFilters.search) params.set('search', newFilters.search);
-    if (newFilters.category !== 'All') params.set('category', newFilters.category);
-    if (newFilters.status !== 'All') params.set('status', newFilters.status);
-    if (newFilters.minBudget) params.set('minBudget', newFilters.minBudget);
-    if (newFilters.maxBudget) params.set('maxBudget', newFilters.maxBudget);
+  useEffect(() => {
+    fetchBusinesses({})
+      .then(setBusinesses)
+      .catch(console.error);
+  }, []);
 
-    const qs = params.toString();
-    router.replace(`/investments${qs ? `?${qs}` : ''}`, { scroll: false });
-  }, [router]);
+  return (
+    <ProtectedRoute>
+      <ToolLayout
+        title="Investment Profiler"
+        subtitle="Discover high-potential opportunities across Africa."
+        navItems={TOOL_NAV}
+      >
+        <div className="flex gap-6">
+          {/* ── Filter Sidebar ────────────────────────────── */}
+          <div className="w-64 flex-shrink-0 hidden lg:block">
+            <div className="space-y-6">
+              {/* Search */}
+              <div>
+                <div className="section-heading">Search</div>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Search investments..."
+                  className="input"
+                />
+              </div>
 
-  const handleFilterChange = (newFilters: FilterState) => {
-    setFilters(newFilters);
-    updateURL(newFilters);
-  };
+              {/* Categories */}
+              <div>
+                <div className="section-heading">Categories</div>
+                <div className="flex flex-wrap gap-2">
+                  {CATEGORIES.map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`chip ${selectedCategory === cat ? 'active' : ''}`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-  const resetForm = () => {
-    setFormTitle('');
-    setFormCategory('');
-    setFormSummary('');
-    setFormDescription('');
-    setFormMinInvestment('');
-    setFormMaxInvestment('');
-    setFormLocation('');
-    setFormStatus('Open');
-    setFormRoi('');
-    setFormImageUrl('');
-  };
+              {/* Budget Range */}
+              <div>
+                <div className="section-heading">Budget Range</div>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={budgetRange[0]}
+                    onChange={e => setBudgetRange([e.target.value, budgetRange[1]])}
+                    placeholder="Min $"
+                    className="input"
+                  />
+                  <input
+                    type="number"
+                    value={budgetRange[1]}
+                    onChange={e => setBudgetRange([budgetRange[0], e.target.value])}
+                    placeholder="Max $"
+                    className="input"
+                  />
+                </div>
+              </div>
 
-  const handleCreateInvestment = async () => {
-    const token = localStorage.getItem('token');
-    if (!token || !formTitle || !formCategory || !formSummary || !formLocation || !formRoi) return;
+              {/* Location */}
+              <div>
+                <div className="section-heading">Location</div>
+                <input type="text" placeholder="City, Country" className="input" />
+              </div>
 
-    setFormSubmitting(true);
-    setSubmitMessage(null);
-    try {
-      const newInvestment = await createInvestment(token, {
-        title: formTitle,
-        category: formCategory,
-        summary: formSummary,
-        description: formDescription || undefined,
-        minInvestment: Number(formMinInvestment) || 0,
-        maxInvestment: Number(formMaxInvestment) || Number(formMinInvestment) || 0,
-        location: formLocation,
-        status: formStatus,
-        roi: formRoi,
-        imageUrl: formImageUrl || undefined,
-      });
-      setInvestments(prev => [newInvestment, ...prev]);
-      resetForm();
-      setShowForm(false);
-      setSubmitMessage({ type: 'success', text: 'Investment listing created!' });
-      setTimeout(() => setSubmitMessage(null), 4000);
-    } catch (err: any) {
-      setSubmitMessage({ type: 'error', text: err.message || 'Failed to create listing' });
-    } finally {
-      setFormSubmitting(false);
-    }
-  };
+              {/* Status */}
+              <div>
+                <div className="section-heading">Status</div>
+                <div className="flex flex-wrap gap-2">
+                  {STATUSES.map(status => (
+                    <button
+                      key={status}
+                      onClick={() => setSelectedStatus(status)}
+                      className={`chip ${selectedStatus === status ? 'active' : ''}`}
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-  const handleDeleteInvestment = async (id: string) => {
+              <button
+                onClick={() => { setSelectedCategory('All'); setSelectedStatus('All'); setSearch(''); setBudgetRange(['', '']); }}
+                className="btn btn-outline w-full"
+              >
+                Clear Filters
+              </button>
+            </div>
+          </div>
+
+          {/* ── Main Content ─────────────────────────────── */}
+          <div className="flex-1 min-w-0">
+            {/* Tabs */}
+            <div className="flex items-center gap-4 mb-6">
+              <button
+                onClick={() => setActiveTab('opportunities')}
+                className={`text-sm font-bold pb-2 border-b-2 transition-colors ${
+                  activeTab === 'opportunities'
+                    ? 'text-[#C1027D] border-[#C1027D]'
+                    : 'text-gray-400 border-transparent hover:text-gray-600'
+                }`}
+              >
+                Opportunities
+              </button>
+              <button
+                onClick={() => setActiveTab('directory')}
+                className={`text-sm font-bold pb-2 border-b-2 transition-colors ${
+                  activeTab === 'directory'
+                    ? 'text-[#C1027D] border-[#C1027D]'
+                    : 'text-gray-400 border-transparent hover:text-gray-600'
+                }`}
+              >
+                Business Directory
+              </button>
+            </div>
+
+            {activeTab === 'opportunities' ? (
+              <>
+                {/* Mobile Filter Chips */}
+                <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide lg:hidden">
+                  {CATEGORIES.slice(0, 6).map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`chip ${selectedCategory === cat ? 'active' : ''}`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
+                {loading ? (
+                  <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                      <div key={i} className="card animate-pulse">
+                        <div className="h-40 bg-[#FBEAF5] rounded-xl mb-4" />
+                        <div className="h-5 w-3/4 bg-[#FBEAF5] rounded mb-2" />
+                        <div className="h-3 w-full bg-[#FDF4FA] rounded mb-2" />
+                        <div className="h-3 w-2/3 bg-[#FDF4FA] rounded" />
+                      </div>
+                    ))}
+                  </div>
+                ) : investments.length === 0 ? (
+                  <div className="text-center py-20 card">
+                    <div className="w-16 h-16 rounded-full bg-[#FBEAF5] flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-[#E97BC4]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">No investments found</h3>
+                    <p className="text-sm text-gray-400">Try adjusting your filters</p>
+                  </div>
+                ) : selectedInvestment ? (
+                  /* ── Detail View ─────────────────────────── */
+                  <div className="card animate-fade-in-up">
+                    <button onClick={() => setSelectedInvestment(null)} className="back-btn mb-4">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                      </svg>
+                      Back to list
+                    </button>
+
+                    {selectedInvestment.imageUrl && (
+                      <img src={selectedInvestment.imageUrl} alt={selectedInvestment.title} className="w-full h-48 object-cover rounded-xl mb-4" />
+                    )}
+
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="badge info">{selectedInvestment.category}</span>
+                      <span className={`badge ${selectedInvestment.status === 'Open' ? 'success' : selectedInvestment.status === 'Closing Soon' ? 'warning' : 'info'}`}>
+                        {selectedInvestment.status}
+                      </span>
+                    </div>
+
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">{selectedInvestment.title}</h2>
+                    <p className="text-sm text-gray-500 leading-relaxed mb-4">{selectedInvestment.summary}</p>
+
+                    {selectedInvestment.description && (
+                      <p className="text-sm text-gray-600 leading-relaxed mb-6">{selectedInvestment.description}</p>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                      <div className="bg-[#FDF4FA] rounded-xl p-3">
+                        <div className="text-xs text-gray-400 font-semibold">Min Investment</div>
+                        <div className="text-sm font-bold text-gray-900">${selectedInvestment.minInvestment?.toLocaleString() || '—'}</div>
+                      </div>
+                      <div className="bg-[#FDF4FA] rounded-xl p-3">
+                        <div className="text-xs text-gray-400 font-semibold">Est. ROI</div>
+                        <div className="text-sm font-bold text-[#C1027D]">{selectedInvestment.roi || '—'}</div>
+                      </div>
+                      <div className="bg-[#FDF4FA] rounded-xl p-3">
+                        <div className="text-xs text-gray-400 font-semibold">Location</div>
+                        <div className="text-sm font-bold text-gray-900">{selectedInvestment.location || '—'}</div>
+                      </div>
+                      <div className="bg-[#FDF4FA] rounded-xl p-3">
+                        <div className="text-xs text-gray-400 font-semibold">Max Investment</div>
+                        <div className="text-sm font-bold text-gray-900">${selectedInvestment.maxInvestment?.toLocaleString() || '—'}</div>
+                      </div>
+                    </div>
+
+                    <button className="btn btn-primary w-full">
+                      Start a Conversation
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  /* ── Grid View ──────────────────────────── */
+                  <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {investments.map((investment) => (
+                      <div key={investment.id} className="relative">
+                        <div
+                          className="card cursor-pointer hover:shadow-lg hover:border-[#F8CEE9] hover:-translate-y-1 transition-all duration-300"
+                          onClick={() => setSelectedInvestment(investment)}
+                        >
+                          {investment.imageUrl && (
+                            <img src={investment.imageUrl} alt={investment.title} className="w-full h-40 object-cover rounded-xl mb-3" />
+                          )}
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="badge info text-[10px]">{investment.category}</span>
+                            <span className={`badge text-[10px] ${investment.status === 'Open' ? 'success' : investment.status === 'Closing Soon' ? 'warning' : 'info'}`}>
+                              {investment.status}
+                            </span>
+                          </div>
+                          <h3 className="font-bold text-gray-900 mb-1">{investment.title}</h3>
+                          <p className="text-xs text-gray-500 line-clamp-2 mb-3">{investment.summary}</p>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-[#C1027D]">{investment.roi}</span>
+                            <span className="text-xs text-gray-400">{investment.location}</span>
+                          </div>
+                        </div>
+                        {user && (investment.authorId === user.id || user.role === 'ADMIN') && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeleteInvestment(investment.id); }}
+                            className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-red-500/90 text-white flex items-center justify-center hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              /* ── Business Directory Tab ──────────────────── */
+              <>
+                {businesses.length === 0 ? (
+                  <div className="text-center py-20 card">
+                    <div className="w-16 h-16 rounded-full bg-[#FBEAF5] flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-[#E97BC4]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">No businesses yet</h3>
+                    <p className="text-sm text-gray-400">Businesses will appear here once listed.</p>
+                  </div>
+                ) : (
+                  <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {businesses.map((biz: any) => (
+                      <div key={biz.id} className="card hover:shadow-lg hover:border-[#F8CEE9] transition-all">
+                        <div className="flex items-start gap-3 mb-3">
+                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#C1027D] to-[#8A0260] flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                            {biz.name?.[0]?.toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="font-bold text-gray-900 truncate">{biz.name}</h3>
+                            <p className="text-xs text-gray-400">{[biz.city, biz.country].filter(Boolean).join(', ') || 'Location not set'}</p>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 line-clamp-2 mb-3">{biz.description || biz.tagline || 'No description available.'}</p>
+                        {biz.services?.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {biz.services.slice(0, 3).map((s: string) => (
+                              <span key={s} className="px-2 py-0.5 rounded-full bg-[#FBEAF5] text-[10px] font-semibold text-[#C1027D]">{s}</span>
+                            ))}
+                          </div>
+                        )}
+                        <button className="btn btn-outline w-full text-xs py-2">
+                          Visit Website
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </ToolLayout>
+    </ProtectedRoute>
+  );
+
+  async function handleDeleteInvestment(id: string) {
     const token = localStorage.getItem('token');
     if (!token) return;
     try {
       await deleteInvestment(token, id);
       setInvestments(prev => prev.filter(inv => inv.id !== id));
-      setDeleteMessage('Listing deleted');
-      setTimeout(() => setDeleteMessage(''), 3000);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
     }
-  };
-
-  return (
-    <ProtectedRoute>
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-green-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="h-10 overflow-hidden">
-              <Image src="/logoo.png" alt="InfoPulse Logo" width={120} height={40} className="object-contain" />
-            </div>
-          </Link>
-          <nav className="flex items-center gap-1 sm:gap-2">
-            <Link href="/" className="text-sm font-medium text-gray-500 hover:text-green-600 px-2 sm:px-3 py-2 rounded-lg hover:bg-green-50 transition-colors">Home</Link>
-            <Link href="/business" className="text-sm font-medium text-gray-500 hover:text-green-600 px-2 sm:px-3 py-2 rounded-lg hover:bg-green-50 transition-colors hidden sm:block">Business</Link>
-            <Link href="/messaging" className="text-sm font-medium text-gray-500 hover:text-green-600 px-2 sm:px-3 py-2 rounded-lg hover:bg-green-50 transition-colors hidden sm:block">Bulk Messaging</Link>
-            <Link href="/poster/dashboard" className="text-sm font-medium text-gray-500 hover:text-green-600 px-2 sm:px-3 py-2 rounded-lg hover:bg-green-50 transition-colors hidden sm:block">Post</Link>
-            {user ? (
-              <Link href="/poster/dashboard" className="text-sm font-semibold bg-green-600 text-white px-4 sm:px-5 py-2 rounded-lg hover:bg-green-700 transition-colors shadow-sm shadow-green-200">Dashboard</Link>
-            ) : (
-              <Link href="/auth" className="text-sm font-semibold bg-green-600 text-white px-4 sm:px-5 py-2 rounded-lg hover:bg-green-700 transition-colors shadow-sm shadow-green-200">Sign In</Link>
-            )}
-          </nav>
-        </div>
-      </header>
-
-      {/* Hero */}
-      <section className="bg-gradient-to-b from-green-50 to-gray-50 border-b border-green-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
-          <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight mb-4">Investment Opportunities</h1>
-            <p className="text-gray-500 text-base sm:text-lg mb-8">Discover high-potential investments across Africa. Filter by category, budget, and location.</p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              {user && (
-                <button
-                  onClick={() => setShowForm(!showForm)}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-green-600 text-white font-semibold px-6 py-3 rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-green-200"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                  </svg>
-                  {showForm ? 'Close Form' : 'List an Investment'}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        {/* Messages */}
-        {submitMessage && (
-          <div className={`mb-6 flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold animate-scale-in ${
-            submitMessage.type === 'success' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700'
-          }`}>
-            <svg className="w-4.5 h-4.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {submitMessage.text}
-          </div>
-        )}
-        {deleteMessage && (
-          <div className="mb-6 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm font-semibold animate-scale-in">
-            {deleteMessage}
-          </div>
-        )}
-
-        {/* Create Form */}
-        {showForm && user && (
-          <div className="mb-8 bg-white border border-green-100 rounded-2xl p-6 animate-fade-in-up">
-            <h3 className="font-bold text-lg text-gray-900 mb-4">Create Investment Listing</h3>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Title *</label>
-                <input type="text" value={formTitle} onChange={e => setFormTitle(e.target.value)} placeholder="Investment title" className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Category *</label>
-                <select value={formCategory} onChange={e => setFormCategory(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500">
-                  <option value="">Select category</option>
-                  {INVESTMENT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Summary *</label>
-                <textarea value={formSummary} onChange={e => setFormSummary(e.target.value)} placeholder="Brief description of the opportunity" rows={2} className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 resize-none" />
-              </div>
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Full Description</label>
-                <textarea value={formDescription} onChange={e => setFormDescription(e.target.value)} placeholder="Detailed description..." rows={3} className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 resize-none" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Min Investment ($)</label>
-                <input type="number" value={formMinInvestment} onChange={e => setFormMinInvestment(e.target.value)} placeholder="50000" className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Max Investment ($)</label>
-                <input type="number" value={formMaxInvestment} onChange={e => setFormMaxInvestment(e.target.value)} placeholder="500000" className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Location *</label>
-                <input type="text" value={formLocation} onChange={e => setFormLocation(e.target.value)} placeholder="City, Country" className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Est. ROI *</label>
-                <input type="text" value={formRoi} onChange={e => setFormRoi(e.target.value)} placeholder="18-24%" className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Status</label>
-                <select value={formStatus} onChange={e => setFormStatus(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500">
-                  {INVESTMENT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Image URL</label>
-                <input type="url" value={formImageUrl} onChange={e => setFormImageUrl(e.target.value)} placeholder="https://..." className="w-full px-4 py-2.5 rounded-xl border border-green-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500" />
-              </div>
-            </div>
-            <div className="flex gap-3 mt-5">
-              <button onClick={() => { setShowForm(false); resetForm(); }} className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>
-              <button
-                onClick={handleCreateInvestment}
-                disabled={formSubmitting || !formTitle || !formCategory || !formSummary || !formLocation || !formRoi}
-                className="px-6 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 transition-all disabled:opacity-40 shadow-sm shadow-green-200"
-              >
-                {formSubmitting ? 'Creating...' : 'Create Listing'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Filters + Grid */}
-        <div className="flex gap-8">
-          <InvestmentFilters filters={filters} onFilterChange={handleFilterChange} resultCount={investments.length} />
-
-          <div className="flex-1 min-w-0">
-            {loading ? (
-              <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {[1, 2, 3, 4, 5, 6].map(i => (
-                  <div key={i} className="bg-white border border-green-100 rounded-2xl overflow-hidden animate-pulse">
-                    <div className="h-48 bg-green-100" />
-                    <div className="p-5 space-y-3">
-                      <div className="h-5 w-3/4 bg-green-100 rounded" />
-                      <div className="h-3 w-full bg-green-50 rounded" />
-                      <div className="h-3 w-2/3 bg-green-50 rounded" />
-                      <div className="h-10 bg-green-100 rounded-xl" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : investments.length === 0 ? (
-              <div className="text-center py-20 bg-white border border-green-100 rounded-2xl">
-                <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-1">No investments found</h3>
-                <p className="text-sm text-gray-400 mb-4">Try adjusting your filters or check back later</p>
-                <button onClick={() => handleFilterChange({ search: '', category: 'All', status: 'All', minBudget: '', maxBudget: '' })} className="px-5 py-2 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors">Clear Filters</button>
-              </div>
-            ) : (
-              <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {investments.map((investment) => (
-                  <div key={investment.id} className="relative">
-                    <InvestmentCard investment={investment} />
-                    {user && (investment.authorId === user.id || user.role === 'ADMIN') && (
-                      <button
-                        onClick={() => handleDeleteInvestment(investment.id)}
-                        className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-red-500/90 text-white flex items-center justify-center hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
-                        title="Delete listing"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-    </ProtectedRoute>
-  );
+  }
 }
