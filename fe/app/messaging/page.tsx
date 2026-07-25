@@ -4,7 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import ToolLayout from '@/components/tool-layout';
 import ProtectedRoute from '@/components/protected-route';
-import { sendMessage, fetchCampaigns } from '@/lib/api';
+import { sendMessage, fetchCampaigns, uploadAttachment } from '@/lib/api';
+import { API_URL } from '@/lib/config';
 
 const TOOL_NAV = [
   { label: 'Dashboard', href: '/poster/dashboard', icon: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z' },
@@ -41,6 +42,12 @@ export default function MessagingDashboard() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [sendSuccess, setSendSuccess] = useState(false);
+
+  // File link
+  const [fileUrl, setFileUrl] = useState('');
+  const [fileName, setFileName] = useState('');
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const fileUploadRef = useRef<HTMLInputElement>(null);
 
   // Campaigns (fetched from backend)
   const [campaigns, setCampaigns] = useState<{ id: string; name: string; status: string; recipients: number; channels: string[]; date: string }[]>([]);
@@ -108,6 +115,29 @@ export default function MessagingDashboard() {
     setAddName(''); setAddPhone(''); setAddEmail('');
   };
 
+  const handleFileUploadForLink = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    setIsUploadingFile(true);
+    try {
+      const result = await uploadAttachment(token, file);
+      setFileUrl(result.url);
+      setFileName(file.name);
+    } catch (err: any) {
+      alert(err.message || 'Failed to upload file');
+    } finally {
+      setIsUploadingFile(false);
+    }
+  };
+
+  const removeFileLink = () => {
+    setFileUrl('');
+    setFileName('');
+    if (fileUploadRef.current) fileUploadRef.current.value = '';
+  };
+
   const handleSend = async () => {
     setIsSending(true);
     try {
@@ -117,12 +147,13 @@ export default function MessagingDashboard() {
         return;
       }
       const activeChannels = Object.entries(channels).filter(([, v]) => v).map(([k]) => k.toUpperCase());
+      const fileLink = fileUrl ? `\n\nDownload file: ${API_URL}${fileUrl}` : '';
       await sendMessage(token, {
         name: campaignName,
         emailSubject,
-        emailMessage,
-        smsMessage,
-        whatsappMessage,
+        emailMessage: emailMessage + fileLink,
+        smsMessage: smsMessage + fileLink,
+        whatsappMessage: whatsappMessage + fileLink,
         contacts,
         channels: activeChannels,
         cost: contacts.length * 20,
@@ -154,7 +185,7 @@ export default function MessagingDashboard() {
   const resetForm = () => {
     setContacts([]); setEmailSubject(''); setEmailMessage(''); setSmsMessage(''); setWhatsappMessage(''); setCampaignName('');
     setChannels({ whatsapp: false, email: true, sms: false });
-    setStep(0); setAgreedToTerms(false);
+    setStep(0); setAgreedToTerms(false); removeFileLink();
   };
 
   const cost = contacts.length * 20;
@@ -397,6 +428,60 @@ export default function MessagingDashboard() {
                       <input type="text" placeholder="e.g. July Newsletter" value={campaignName} onChange={e => setCampaignName(e.target.value)} className="input" />
                     </div>
 
+                    {/* File Link */}
+                    <div className="card space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-gray-900 text-sm">Attach a File (Optional)</h3>
+                          <p className="text-xs text-gray-400">Upload a file and a download link will be included in the message</p>
+                        </div>
+                      </div>
+
+                      {!fileUrl ? (
+                        <div
+                          className="border-2 border-dashed border-gray-200 rounded-xl p-5 text-center hover:border-indigo-300 transition-colors cursor-pointer"
+                          onClick={() => fileUploadRef.current?.click()}
+                        >
+                          <svg className="w-8 h-8 mx-auto text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                          </svg>
+                          <p className="text-sm font-semibold text-gray-600">
+                            {isUploadingFile ? 'Uploading...' : 'Click to upload a file'}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, XLS, XLSX, CSV, images — up to 25MB</p>
+                          <input
+                            type="file"
+                            ref={fileUploadRef}
+                            hidden
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.gif,.webp"
+                            onChange={handleFileUploadForLink}
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-100 rounded-xl p-3">
+                          <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                            <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                            </svg>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 truncate">{fileName}</p>
+                            <p className="text-xs text-indigo-600">Link generated and will be included in message</p>
+                          </div>
+                          <button onClick={removeFileLink} className="text-gray-400 hover:text-red-500 transition-colors p-1">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
                     {/* Email composer */}
                     {channels.email && (
                       <div className="card space-y-3">
@@ -589,6 +674,12 @@ export default function MessagingDashboard() {
                           {Object.entries(channels).filter(([, v]) => v).map(([k]) => k.charAt(0).toUpperCase() + k.slice(1)).join(', ')}
                         </span>
                       </div>
+                      {fileUrl && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">File</span>
+                          <span className="font-semibold text-[#C1027D] truncate ml-4 max-w-[200px]">{fileName}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-500">Estimated Cost</span>
                         <span className="font-bold text-[#C1027D]">{cost.toLocaleString()} RWF</span>
@@ -600,7 +691,7 @@ export default function MessagingDashboard() {
                       <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
                         <div className="section-heading text-blue-600">Email Content</div>
                         <div className="text-xs text-gray-500 mb-1">Subject: <span className="font-semibold text-gray-700">{emailSubject || campaignName || 'Untitled'}</span></div>
-                        <p className="text-sm text-gray-600 whitespace-pre-wrap">{emailMessage}</p>
+                        <p className="text-sm text-gray-600 whitespace-pre-wrap">{emailMessage}{fileUrl ? `\n\nDownload file: ${API_URL}${fileUrl}` : ''}</p>
                       </div>
                     )}
 
@@ -608,10 +699,10 @@ export default function MessagingDashboard() {
                       <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
                         <div className="section-heading text-amber-600">SMS Content</div>
                         <div className="text-xs text-gray-500 mb-1">
-                          {smsMessage.length} chars
+                          {smsMessage.length}{fileUrl ? ` + link` : ''} chars
                           {smsMessage.length > 160 && <span className="text-red-500"> — {Math.ceil(smsMessage.length / 160)} segments</span>}
                         </div>
-                        <p className="text-sm text-gray-600 whitespace-pre-wrap">{smsMessage}</p>
+                        <p className="text-sm text-gray-600 whitespace-pre-wrap">{smsMessage}{fileUrl ? `\n\nDownload file: ${API_URL}${fileUrl}` : ''}</p>
                       </div>
                     )}
 

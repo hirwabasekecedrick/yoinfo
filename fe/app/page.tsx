@@ -53,9 +53,6 @@ export default function Home() {
                     alt="Sending a message"
                     className="relative w-64 h-64 xl:w-80 xl:h-80 object-contain drop-shadow-2xl"
                   />
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#C1027D] text-white text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
-                    📤 Send Instantly
-                  </div>
                 </div>
               </div>
 
@@ -90,9 +87,6 @@ export default function Home() {
                     alt="Receiving a message"
                     className="relative w-64 h-64 xl:w-80 xl:h-80 object-contain drop-shadow-2xl"
                   />
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#8A0260] text-white text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
-                    📱 Receive Anywhere
-                  </div>
                 </div>
               </div>
             </div>

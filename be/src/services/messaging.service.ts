@@ -20,7 +20,7 @@ function normalizePhone(phone: string): string {
   if (cleaned.startsWith('00')) return `+${cleaned.slice(2)}`;
 
   // Starts with 0 (local Rwanda number like 078...) — add +250
-  if (cleaned.startsWith('0')) return `+250${cleaned}`;
+  if (cleaned.startsWith('0')) return `+25${cleaned}`;
 
   // Starts with 250 (country code without +) — add +
   if (cleaned.startsWith('250')) return `+${cleaned}`;
@@ -54,6 +54,7 @@ async function sendSmsViaAfro(phone: string, message: string): Promise<{ success
     });
 
     const data = response.data;
+    console.log(`[SMS] Raw API response for ${normalizedPhone}:`, JSON.stringify(data));
     const respCode = data?.response;
 
     // Response codes: "1000" typically means success for AfroBulkSMS
@@ -87,6 +88,8 @@ async function sendBatchSms(phones: string[], message: string): Promise<{ succes
   if (normalizedPhones.length === 0) {
     return { success: true, totalSent: 0, failed: [] };
   }
+
+  console.log(`[SMS] Batch sending to: ${normalizedPhones.join(', ')}`);
 
   try {
     const response = await axios.get(AFRO_API_URL, {
@@ -178,11 +181,12 @@ const sendWhatsAppStub = async (phone: string, message: string) => {
 export const messagingService = {
   sendEmails: async (recipients: { email: string; name?: string }[], subject: string, text: string) => {
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.ethereal.email',
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: Number(process.env.SMTP_PORT) || 587,
+      secure: false,
       auth: {
-        user: process.env.SMTP_USER || 'ethereal_user',
-        pass: process.env.SMTP_PASS || 'ethereal_pass'
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
       }
     });
 

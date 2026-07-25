@@ -101,6 +101,21 @@ export async function register(email: string, password: string, name: string, co
 
 // ==================== Messaging ====================
 
+export async function uploadAttachment(token: string, file: File) {
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await fetch(`${API_URL}/api/upload/document`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || 'Failed to upload file');
+  }
+  return res.json() as Promise<{ url: string }>;
+}
+
 export async function sendMessage(
   token: string,
   data: {

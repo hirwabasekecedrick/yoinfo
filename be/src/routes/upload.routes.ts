@@ -11,7 +11,7 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({
+const imageUpload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
@@ -24,10 +24,47 @@ const upload = multer({
   },
 });
 
+const documentUpload = multer({
+  storage,
+  limits: { fileSize: 25 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = [
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/csv',
+    ];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('File type not supported. Allowed: JPEG, PNG, GIF, WebP, PDF, DOC, DOCX, XLS, XLSX, CSV'));
+    }
+  },
+});
+
 const router = Router();
 
 router.post('/', authenticate, (req: Request, res: Response) => {
-  upload.single('image')(req, res, (err) => {
+  imageUpload.single('image')(req, res, (err) => {
+    if (err) {
+      const message = err instanceof multer.MulterError ? err.message : err.message;
+      res.status(400).json({ error: message });
+      return;
+    }
+    if (!req.file) {
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
+    }
+    const url = `/uploads/${req.file.filename}`;
+    res.json({ url });
+  });
+});
+
+router.post('/document', authenticate, (req: Request, res: Response) => {
+  documentUpload.single('file')(req, res, (err) => {
     if (err) {
       const message = err instanceof multer.MulterError ? err.message : err.message;
       res.status(400).json({ error: message });
