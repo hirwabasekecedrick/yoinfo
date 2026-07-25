@@ -1,1 +1,2 @@
-export const API_URL = 'https://infopulse-be.onrender.com';
+export const API_URL = 'http://localhost:5050';
+
