@@ -155,6 +155,83 @@ export async function fetchCampaigns(token: string) {
   return res.json();
 }
 
+// ==================== Payments (XentriPay) ====================
+
+export async function createCheckoutSession(
+  token: string,
+  data: {
+    campaignData: any;
+    paymentMethod: 'momo' | 'cc';
+    customerPhone?: string;
+    customerName?: string;
+    customerEmail?: string;
+  }
+) {
+  const res = await fetch(`${API_URL}/api/payments/checkout`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || 'Failed to create checkout session');
+  }
+  return res.json() as Promise<{
+    sessionId: string;
+    checkoutUrl: string;
+    customerRef: string;
+    status: string;
+  }>;
+}
+
+export async function payCheckoutSession(
+  token: string,
+  data: {
+    sessionId: string;
+    customerRef: string;
+    paymentMethod: 'momo' | 'cc';
+    gatewayRedirectUrl?: string;
+  }
+) {
+  const res = await fetch(`${API_URL}/api/payments/pay`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || 'Failed to initiate payment');
+  }
+  return res.json() as Promise<{
+    status: string;
+    redirectTo: string;
+    gatewayUrl: string;
+    paymentMethod: string;
+  }>;
+}
+
+export async function checkPaymentStatus(token: string, customerRef: string) {
+  const res = await fetch(`${API_URL}/api/payments/status?customerRef=${encodeURIComponent(customerRef)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || 'Failed to check payment status');
+  }
+  return res.json() as Promise<{
+    customerRef: string;
+    status: string;
+    pendingStatus: string;
+    updatedAt: string;
+  }>;
+}
+
 // ==================== Investments ====================
 
 export async function fetchInvestments(params?: {

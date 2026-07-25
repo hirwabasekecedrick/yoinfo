@@ -219,7 +219,6 @@ export default function MessagingDashboard() {
       });
       setShowPaymentModal(false);
       setSendSuccess(true);
-      // Refresh campaigns list
       fetchCampaigns(token)
         .then((data) => {
           const mapped = (data || []).map((c: any) => ({
@@ -847,11 +846,18 @@ export default function MessagingDashboard() {
 
                     <div className="flex gap-3">
                       <button onClick={() => setStep(2)} className="btn btn-outline flex-1">Back</button>
-                      <button onClick={() => setShowPaymentModal(true)} className="btn btn-primary flex-[2]">
-                        Send Now
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-                        </svg>
+                      <button onClick={handleSend} className="btn btn-primary flex-[2]" disabled={isSending}>
+                        {isSending ? (
+                          <span className="flex items-center gap-2">
+                            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                            Sending...
+                          </span>
+                        ) : 'Send Now'}
+                        {!isSending && (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                          </svg>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -971,69 +977,6 @@ export default function MessagingDashboard() {
             )}
           </div>
         </div>
-
-        {/* ── Payment Modal ──────────────────────────────── */}
-        {showPaymentModal && (
-          <div className="modal-overlay" onClick={() => setShowPaymentModal(false)}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-gray-900">Confirm Payment</h3>
-                <button onClick={() => setShowPaymentModal(false)} className="text-gray-400 hover:text-gray-600">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="bg-[#FDF4FA] rounded-xl p-4 space-y-3 mb-6">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Campaign</span>
-                  <span className="font-semibold">{campaignName || 'Untitled'}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Recipients</span>
-                  <span className="font-semibold">{contacts.length}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Channels</span>
-                  <span className="font-semibold">
-                    {Object.entries(channels).filter(([, v]) => v).map(([k]) => k.charAt(0).toUpperCase() + k.slice(1)).join(', ')}
-                  </span>
-                </div>
-                <div className="border-t border-[#f0e4ec] pt-3 flex justify-between">
-                  <span className="font-bold text-gray-900">Total</span>
-                  <span className="font-bold text-[#C1027D] text-lg">{cost.toLocaleString()} RWF</span>
-                </div>
-              </div>
-
-              <label className="flex items-start gap-3 mb-6 cursor-pointer">
-                <input type="checkbox" checked={agreedToTerms} onChange={e => setAgreedToTerms(e.target.checked)} className="mt-1 w-4 h-4 rounded border-[#f0e4ec] text-[#C1027D] focus:ring-[#C1027D]" />
-                <span className="text-sm text-gray-500">I confirm the message content and recipients are correct. I agree to the terms of service.</span>
-              </label>
-
-              <div className="flex gap-3">
-                <button onClick={() => setShowPaymentModal(false)} className="btn btn-outline flex-1">Cancel</button>
-                <button
-                  onClick={handleSend}
-                  disabled={!agreedToTerms || isSending}
-                  className="btn btn-primary flex-[2] disabled:opacity-40"
-                >
-                  {isSending ? (
-                    <span className="flex items-center gap-2">
-                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                      Sending...
-                    </span>
-                  ) : 'Pay & Send'}
-                  {!isSending && (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-                    </svg>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* ── Toast Notification ──────────────────────────── */}
         {toast && (

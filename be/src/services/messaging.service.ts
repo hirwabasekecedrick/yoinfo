@@ -2,9 +2,9 @@ import nodemailer from 'nodemailer';
 import axios from 'axios';
 
 // ─── AfroBulkSMS Configuration ─────────────────────────────────
-const AFRO_API_KEY = process.env.AFRO_SMS_API_KEY || '';
-const AFRO_FROM_NUMBER = process.env.AFRO_SMS_FROM_NUMBER || '';
-const AFRO_SENDER_ID = process.env.AFRO_SMS_SENDER_ID || '';
+const AFRO_API_KEY = process.env.AFRO_SMS_API_KEY || '16|rN2q7ZEU7k71Tm28mqBLT3J0yOQsRRdnA6OtTWrddcf79111';
+const AFRO_FROM_NUMBER = process.env.AFRO_SMS_FROM_NUMBER || '250791902917';
+const AFRO_SENDER_ID = process.env.AFRO_SMS_SENDER_ID || 'MOPAS-MFA';
 const AFRO_FROM_TYPE = process.env.AFRO_SMS_FROM_TYPE || 'sender_id';
 const AFRO_API_URL = 'https://afrobulksms.com/api/sent/compose';
 
