@@ -1,16 +1,17 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import ToolLayout from '@/components/tool-layout';
 import ProtectedRoute from '@/components/protected-route';
+import { sendMessage, fetchCampaigns } from '@/lib/api';
 
 const TOOL_NAV = [
   { label: 'Dashboard', href: '/poster/dashboard', icon: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z' },
   { label: 'Investments', href: '/investments', icon: 'M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941' },
 ];
 
-const CAMPAIGN_STEPS = ['Contacts', 'Message', 'Channels', 'Review'];
+const CAMPAIGN_STEPS = ['Contacts', 'Channels', 'Message', 'Review'];
 
 type View = 'dashboard' | 'new-campaign' | 'campaigns' | 'contacts' | 'templates' | 'settings';
 
@@ -25,8 +26,11 @@ export default function MessagingDashboard() {
   const [addEmail, setAddEmail] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Message
-  const [message, setMessage] = useState('');
+  // Messages (channel-aware)
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailMessage, setEmailMessage] = useState('');
+  const [smsMessage, setSmsMessage] = useState('');
+  const [whatsappMessage, setWhatsappMessage] = useState('');
   const [campaignName, setCampaignName] = useState('');
 
   // Channels
@@ -38,12 +42,27 @@ export default function MessagingDashboard() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [sendSuccess, setSendSuccess] = useState(false);
 
-  // Campaigns (mock)
-  const [campaigns] = useState([
-    { id: '1', name: 'July Newsletter', status: 'sent', recipients: 1240, channels: ['Email'], date: 'Jul 20, 2026' },
-    { id: '2', name: 'Flash Sale Alert', status: 'sent', recipients: 860, channels: ['SMS', 'WhatsApp'], date: 'Jul 18, 2026' },
-    { id: '3', name: 'Welcome Series', status: 'draft', recipients: 0, channels: [], date: 'Jul 15, 2026' },
-  ]);
+  // Campaigns (fetched from backend)
+  const [campaigns, setCampaigns] = useState<{ id: string; name: string; status: string; recipients: number; channels: string[]; date: string }[]>([]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetchCampaigns(token)
+        .then((data) => {
+          const mapped = (data || []).map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            status: c.status?.toLowerCase() || 'sent',
+            recipients: c.recipients || 0,
+            channels: Array.isArray(c.channels) ? c.channels : [],
+            date: c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '',
+          }));
+          setCampaigns(mapped);
+        })
+        .catch(() => {});
+    }
+  }, []);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -93,30 +112,52 @@ export default function MessagingDashboard() {
     setIsSending(true);
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        alert('You must be logged in to send campaigns.');
+        return;
+      }
       const activeChannels = Object.entries(channels).filter(([, v]) => v).map(([k]) => k.toUpperCase());
-      await fetch('/api/messaging/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name: campaignName, message, contacts, channels: activeChannels, cost: contacts.length * 20 }),
+      await sendMessage(token, {
+        name: campaignName,
+        emailSubject,
+        emailMessage,
+        smsMessage,
+        whatsappMessage,
+        contacts,
+        channels: activeChannels,
+        cost: contacts.length * 20,
       });
       setShowPaymentModal(false);
       setSendSuccess(true);
+      // Refresh campaigns list
+      fetchCampaigns(token)
+        .then((data) => {
+          const mapped = (data || []).map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            status: c.status?.toLowerCase() || 'sent',
+            recipients: c.recipients || 0,
+            channels: Array.isArray(c.channels) ? c.channels : [],
+            date: c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '',
+          }));
+          setCampaigns(mapped);
+        })
+        .catch(() => {});
       setTimeout(() => { setSendSuccess(false); setView('dashboard'); resetForm(); }, 2000);
-    } catch {
-      alert('Error sending campaign');
+    } catch (err: any) {
+      alert(err.message || 'Error sending campaign');
     } finally {
       setIsSending(false);
     }
   };
 
   const resetForm = () => {
-    setContacts([]); setMessage(''); setCampaignName('');
+    setContacts([]); setEmailSubject(''); setEmailMessage(''); setSmsMessage(''); setWhatsappMessage(''); setCampaignName('');
     setChannels({ whatsapp: false, email: true, sms: false });
     setStep(0); setAgreedToTerms(false);
   };
 
   const cost = contacts.length * 20;
-  const phonePreview = message.replace('{name}', contacts[0]?.name || 'John').replace('{phone}', contacts[0]?.phone || '+250 7XX XXX XXX');
 
   return (
     <ProtectedRoute>
@@ -280,48 +321,12 @@ export default function MessagingDashboard() {
                   </div>
                 )}
 
-                {/* Step: Message */}
+                {/* Step: Channels (step 1 — chosen before composing) */}
                 {step === 1 && (
-                  <div className="grid lg:grid-cols-2 gap-6">
-                    <div className="card space-y-4">
-                      <div>
-                        <h3 className="font-bold text-gray-900 mb-1">Compose Message</h3>
-                        <p className="text-sm text-gray-400">Use {'{name}'} and {'{phone}'} for personalization.</p>
-                      </div>
-                      <input type="text" placeholder="Campaign Name" value={campaignName} onChange={e => setCampaignName(e.target.value)} className="input" />
-                      <textarea placeholder="Hi {name}, check out our latest offers!" value={message} onChange={e => setMessage(e.target.value)} className="textarea min-h-[160px]" />
-                      <div className="flex gap-3">
-                        <button onClick={() => setStep(0)} className="btn btn-outline flex-1">Back</button>
-                        <button onClick={() => setStep(2)} disabled={!message.trim()} className="btn btn-primary flex-[2] disabled:opacity-40">
-                          Continue
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Phone Preview */}
-                    <div>
-                      <div className="section-heading mb-3">Preview</div>
-                      <div className="phone-preview">
-                        <div className="phone-screen">
-                          <div className="phone-header">yoInfo Message</div>
-                          <div className="phone-body">
-                            {phonePreview || 'Your message will appear here...'}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Step: Channels */}
-                {step === 2 && (
                   <div className="card space-y-5">
                     <div>
                       <h3 className="font-bold text-gray-900 mb-1">Select Channels</h3>
-                      <p className="text-sm text-gray-400">Choose where to send your message.</p>
+                      <p className="text-sm text-gray-400">Choose where to send your message. Each channel has different content limits.</p>
                     </div>
                     <div className="flex flex-wrap gap-3">
                       {(['email', 'sms', 'whatsapp'] as const).map(ch => (
@@ -336,20 +341,222 @@ export default function MessagingDashboard() {
                       ))}
                     </div>
 
-                    {/* Email Preview */}
-                    {channels.email && (
-                      <div className="email-preview">
-                        <div className="email-header">
-                          <strong>From:</strong> yoInfo Campaign &lt;noreply@yoinfo.com&gt;
-                          <br /><strong>Subject:</strong> {campaignName || 'Your Campaign'}
+                    {/* Channel capability hints */}
+                    <div className="space-y-2">
+                      {channels.email && (
+                        <div className="flex items-start gap-2 text-xs text-gray-500 bg-blue-50 border border-blue-100 rounded-lg p-3">
+                          <svg className="w-4 h-4 mt-0.5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                          </svg>
+                          <span><strong>Email:</strong> Supports long content, rich text, PDF letters, and document links. No character limit.</span>
                         </div>
-                        <div className="email-body">{phonePreview || 'Your message content here...'}</div>
+                      )}
+                      {channels.sms && (
+                        <div className="flex items-start gap-2 text-xs text-gray-500 bg-amber-50 border border-amber-100 rounded-lg p-3">
+                          <svg className="w-4 h-4 mt-0.5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                          </svg>
+                          <span><strong>SMS:</strong> Limited to 160 characters per segment. Keep it short — use a link for full details. Longer messages cost more.</span>
+                        </div>
+                      )}
+                      {channels.whatsapp && (
+                        <div className="flex items-start gap-2 text-xs text-gray-500 bg-green-50 border border-green-100 rounded-lg p-3">
+                          <svg className="w-4 h-4 mt-0.5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337z" />
+                          </svg>
+                          <span><strong>WhatsApp:</strong> Supports rich text, images, and documents up to ~1024 characters.</span>
+                        </div>
+                      )}
+                      {!channels.email && !channels.sms && !channels.whatsapp && (
+                        <p className="text-sm text-red-500">Select at least one channel to continue.</p>
+                      )}
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button onClick={() => setStep(0)} className="btn btn-outline flex-1">Back</button>
+                      <button
+                        onClick={() => setStep(2)}
+                        disabled={!channels.email && !channels.sms && !channels.whatsapp}
+                        className="btn btn-primary flex-[2] disabled:opacity-40"
+                      >
+                        Compose Message
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step: Message (step 2 — channel-aware composition) */}
+                {step === 2 && (
+                  <div className="space-y-5">
+                    {/* Campaign Name */}
+                    <div className="card">
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">Campaign Name</label>
+                      <input type="text" placeholder="e.g. July Newsletter" value={campaignName} onChange={e => setCampaignName(e.target.value)} className="input" />
+                    </div>
+
+                    {/* Email composer */}
+                    {channels.email && (
+                      <div className="card space-y-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
+                            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-gray-900 text-sm">Email Message</h3>
+                            <p className="text-xs text-gray-400">Long content, rich text, documents & PDFs supported</p>
+                          </div>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Email subject line"
+                          value={emailSubject}
+                          onChange={e => setEmailSubject(e.target.value)}
+                          className="input"
+                        />
+                        <textarea
+                          placeholder="Hi {name}, here is our latest update...&#10;&#10;You can write a detailed message, include document links, or attach a PDF letter."
+                          value={emailMessage}
+                          onChange={e => setEmailMessage(e.target.value)}
+                          className="textarea min-h-[180px]"
+                        />
+                        <div className="flex items-center justify-between text-xs text-gray-400">
+                          <span>{emailMessage.length.toLocaleString()} characters — no limit</span>
+                          <span>Use {'{name}'} for personalization</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* SMS composer */}
+                    {channels.sms && (
+                      <div className="card space-y-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center">
+                            <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-gray-900 text-sm">SMS Message</h3>
+                            <p className="text-xs text-gray-400">Short text — 160 chars per segment</p>
+                          </div>
+                        </div>
+                        <textarea
+                          placeholder="Hi {name}, check out our offer: https://yoinfo.com/go"
+                          value={smsMessage}
+                          onChange={e => setSmsMessage(e.target.value)}
+                          className="textarea min-h-[100px]"
+                          maxLength={480}
+                        />
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className={`font-semibold ${smsMessage.length > 160 ? 'text-red-500' : smsMessage.length > 140 ? 'text-amber-500' : 'text-gray-400'}`}>
+                              {smsMessage.length} / 160 characters
+                            </span>
+                            {smsMessage.length > 160 && (
+                              <span className="text-red-500 font-semibold">
+                                Will be sent as {Math.ceil(smsMessage.length / 160)} SMS segments
+                              </span>
+                            )}
+                          </div>
+                          <div className="progress">
+                            <div
+                              className="progress-fill"
+                              style={{
+                                width: `${Math.min((smsMessage.length / 160) * 100, 100)}%`,
+                                background: smsMessage.length > 160
+                                  ? 'linear-gradient(90deg, #f59e0b, #ef4444)'
+                                  : undefined,
+                              }}
+                            />
+                          </div>
+                          {smsMessage.length > 140 && smsMessage.length <= 160 && (
+                            <p className="text-xs text-amber-500">Approaching limit — consider adding a link instead</p>
+                          )}
+                          {smsMessage.length > 160 && (
+                            <p className="text-xs text-red-500">Over limit — each 160 chars = 1 extra SMS segment (extra cost)</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* WhatsApp composer */}
+                    {channels.whatsapp && (
+                      <div className="card space-y-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-green-100 flex items-center justify-center">
+                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-gray-900 text-sm">WhatsApp Message</h3>
+                            <p className="text-xs text-gray-400">Rich text, images, documents — up to ~1024 chars</p>
+                          </div>
+                        </div>
+                        <textarea
+                          placeholder="Hi {name}, here is our latest offer with details..."
+                          value={whatsappMessage}
+                          onChange={e => setWhatsappMessage(e.target.value)}
+                          className="textarea min-h-[120px]"
+                          maxLength={1024}
+                        />
+                        <div className="flex items-center justify-between text-xs">
+                          <span className={`font-semibold ${whatsappMessage.length > 1024 ? 'text-red-500' : whatsappMessage.length > 900 ? 'text-amber-500' : 'text-gray-400'}`}>
+                            {whatsappMessage.length} / 1024 characters
+                          </span>
+                          <span className="text-gray-400">Use {'{name}'} for personalization</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Preview for email */}
+                    {channels.email && emailMessage && (
+                      <div className="card">
+                        <div className="section-heading mb-3">Email Preview</div>
+                        <div className="email-preview">
+                          <div className="email-header">
+                            <strong>From:</strong> yoInfo Campaign &lt;noreply@yoinfo.com&gt;
+                            <br /><strong>Subject:</strong> {emailSubject || campaignName || 'Your Campaign'}
+                          </div>
+                          <div className="email-body">
+                            {emailMessage.replace('{name}', contacts[0]?.name || 'John').replace('{phone}', contacts[0]?.phone || '+250 7XX XXX XXX')}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Preview for SMS */}
+                    {channels.sms && smsMessage && (
+                      <div className="card">
+                        <div className="section-heading mb-3">SMS Preview</div>
+                        <div className="phone-preview">
+                          <div className="phone-screen">
+                            <div className="phone-header">yoInfo SMS</div>
+                            <div className="phone-body">
+                              {smsMessage.replace('{name}', contacts[0]?.name || 'John').replace('{phone}', contacts[0]?.phone || '+250 7XX XXX XXX')}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     )}
 
                     <div className="flex gap-3">
                       <button onClick={() => setStep(1)} className="btn btn-outline flex-1">Back</button>
-                      <button onClick={() => setStep(3)} className="btn btn-primary flex-[2]">
+                      <button
+                        onClick={() => setStep(3)}
+                        disabled={
+                          (channels.email && !emailMessage.trim()) ||
+                          (channels.sms && !smsMessage.trim()) ||
+                          (channels.whatsapp && !whatsappMessage.trim()) ||
+                          (!channels.email && !channels.sms && !channels.whatsapp)
+                        }
+                        className="btn btn-primary flex-[2] disabled:opacity-40"
+                      >
                         Review & Send
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
@@ -359,7 +566,7 @@ export default function MessagingDashboard() {
                   </div>
                 )}
 
-                {/* Step: Review */}
+                {/* Step: Review (step 3) */}
                 {step === 3 && (
                   <div className="card space-y-5">
                     <div>
@@ -388,10 +595,33 @@ export default function MessagingDashboard() {
                       </div>
                     </div>
 
-                    <div className="bg-[#FDF4FA] rounded-xl p-4">
-                      <div className="section-heading">Message</div>
-                      <p className="text-sm text-gray-600 whitespace-pre-wrap">{message}</p>
-                    </div>
+                    {/* Per-channel content preview */}
+                    {channels.email && (
+                      <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                        <div className="section-heading text-blue-600">Email Content</div>
+                        <div className="text-xs text-gray-500 mb-1">Subject: <span className="font-semibold text-gray-700">{emailSubject || campaignName || 'Untitled'}</span></div>
+                        <p className="text-sm text-gray-600 whitespace-pre-wrap">{emailMessage}</p>
+                      </div>
+                    )}
+
+                    {channels.sms && (
+                      <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
+                        <div className="section-heading text-amber-600">SMS Content</div>
+                        <div className="text-xs text-gray-500 mb-1">
+                          {smsMessage.length} chars
+                          {smsMessage.length > 160 && <span className="text-red-500"> — {Math.ceil(smsMessage.length / 160)} segments</span>}
+                        </div>
+                        <p className="text-sm text-gray-600 whitespace-pre-wrap">{smsMessage}</p>
+                      </div>
+                    )}
+
+                    {channels.whatsapp && (
+                      <div className="bg-green-50 border border-green-100 rounded-xl p-4">
+                        <div className="section-heading text-green-600">WhatsApp Content</div>
+                        <div className="text-xs text-gray-500 mb-1">{whatsappMessage.length} chars</div>
+                        <p className="text-sm text-gray-600 whitespace-pre-wrap">{whatsappMessage}</p>
+                      </div>
+                    )}
 
                     <div className="flex gap-3">
                       <button onClick={() => setStep(2)} className="btn btn-outline flex-1">Back</button>

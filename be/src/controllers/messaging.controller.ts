@@ -5,7 +5,7 @@ import { messagingService } from '../services/messaging.service';
 
 export const sendBulkMessage = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, message, contacts, channels, cost } = req.body;
+    const { name, message, emailSubject, emailMessage, smsMessage, whatsappMessage, contacts, channels, cost } = req.body;
     if (!req.user) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -16,29 +16,47 @@ export const sendBulkMessage = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    if (!message) {
+    // Determine which channel-specific messages to use, with fallback to legacy `message` field
+    const finalEmailMessage = emailMessage || message || '';
+    const finalEmailSubject = emailSubject || name || 'Bulk Message';
+    const finalSmsMessage = smsMessage || message || '';
+    const finalWhatsappMessage = whatsappMessage || smsMessage || message || '';
+
+    if (!finalEmailMessage && !finalSmsMessage && !finalWhatsappMessage) {
       res.status(400).json({ error: 'Message content is required' });
       return;
     }
 
-    // Process messaging through the service
     let sendSms = channels.includes('SMS');
     let sendEmail = channels.includes('EMAIL');
     let sendWhatsapp = channels.includes('WHATSAPP');
 
-    if (sendEmail) {
-      await messagingService.sendEmails(contacts, name || 'Bulk Message', message);
+    // Filter contacts by channel capability
+    const contactsWithEmail = contacts.filter((c: any) => c.email && c.email.trim());
+    const contactsWithPhone = contacts.filter((c: any) => c.phone && c.phone.trim());
+
+    if (sendEmail && finalEmailMessage && contactsWithEmail.length > 0) {
+      console.log(`[EMAIL] Sending to ${contactsWithEmail.length} contacts with email addresses`);
+      await messagingService.sendEmails(contactsWithEmail, finalEmailSubject, finalEmailMessage);
+    } else if (sendEmail && contactsWithEmail.length === 0) {
+      console.warn('[EMAIL] No contacts with email addresses found — skipping email send');
     }
     
-    if (sendSms || sendWhatsapp) {
-      await messagingService.sendSmsBatch(contacts, message);
+    if (sendSms && finalSmsMessage && contactsWithPhone.length > 0) {
+      console.log(`[SMS] Sending to ${contactsWithPhone.length} contacts with phone numbers`);
+      await messagingService.sendSmsBatch(contactsWithPhone, finalSmsMessage);
+    } else if (sendSms && contactsWithPhone.length === 0) {
+      console.warn('[SMS] No contacts with phone numbers found — skipping SMS send');
     }
 
-    // Log the campaign to the database
+    if (sendWhatsapp && finalWhatsappMessage) {
+      await messagingService.sendWhatsApp(contacts, finalWhatsappMessage);
+    }
+
     const campaign = await prisma.campaign.create({
       data: {
         name: name || 'Untitled Campaign',
-        message,
+        message: finalEmailMessage || finalSmsMessage || finalWhatsappMessage,
         channels: channels || [],
         status: 'SENT',
         recipients: contacts.length,

@@ -11,6 +11,7 @@ describe('Auth Endpoints', () => {
         .send({
           email: uniqueEmail,
           password: 'testpass123',
+          confirmPassword: 'testpass123',
           name: 'Auth Test User',
         });
 
@@ -24,6 +25,7 @@ describe('Auth Endpoints', () => {
         .send({
           email: uniqueEmail,
           password: 'testpass123',
+          confirmPassword: 'testpass123',
           name: 'Duplicate User',
         });
 
@@ -34,7 +36,7 @@ describe('Auth Endpoints', () => {
     it('should reject missing email', async () => {
       const res = await request(app)
         .post('/auth/register')
-        .send({ password: 'testpass123' });
+        .send({ password: 'testpass123', confirmPassword: 'testpass123' });
 
       expect(res.status).toBe(400);
     });
@@ -42,9 +44,18 @@ describe('Auth Endpoints', () => {
     it('should reject short password', async () => {
       const res = await request(app)
         .post('/auth/register')
-        .send({ email: 'short@example.com', password: '123' });
+        .send({ email: 'short@example.com', password: '123', confirmPassword: '123' });
 
       expect(res.status).toBe(400);
+    });
+
+    it('should reject mismatched passwords', async () => {
+      const res = await request(app)
+        .post('/auth/register')
+        .send({ email: 'mismatch@example.com', password: 'testpass123', confirmPassword: 'differentpass', name: 'Mismatch User' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe('Passwords do not match');
     });
   });
 

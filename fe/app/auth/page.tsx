@@ -9,6 +9,7 @@ export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
@@ -28,10 +29,16 @@ export default function AuthPage() {
         localStorage.setItem('user', JSON.stringify(data.user));
         router.push('/poster/dashboard');
       } else {
-        await register(email, password, name);
+        if (password !== confirmPassword) {
+          setError('Passwords do not match.');
+          setIsLoading(false);
+          return;
+        }
+        await register(email, password, name, confirmPassword);
         setSuccess('Account created successfully! Please sign in.');
         setIsLogin(true);
         setPassword('');
+        setConfirmPassword('');
       }
     } catch (err: any) {
       setError(err.message || (isLogin ? 'Failed to sign in.' : 'Failed to create account.'));
@@ -184,6 +191,27 @@ export default function AuthPage() {
                   minLength={6}
                 />
               </div>
+
+              {!isLogin && (
+                <div>
+                  <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Confirm Password
+                  </label>
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="input"
+                    placeholder="••••••••"
+                    required={!isLogin}
+                    minLength={6}
+                  />
+                  {confirmPassword && password !== confirmPassword && (
+                    <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
+                  )}
+                </div>
+              )}
 
               {isLogin && (
                 <div className="flex items-center gap-2">
