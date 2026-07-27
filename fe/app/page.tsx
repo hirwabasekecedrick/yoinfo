@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { ArrowRight, Users, Building2, FileEdit, Handshake, Briefcase, Rocket, PenLine, Send, Phone } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -71,9 +72,7 @@ export default function Home() {
                     className="inline-flex items-center gap-2 bg-[#C1027D] text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-[#8A0260] transition-all shadow-lg shadow-[#C1027D]/25 hover:shadow-xl hover:-translate-y-0.5"
                   >
                     Get Started
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                    </svg>
+                    <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
               </div>
@@ -95,11 +94,11 @@ export default function Home() {
             <div className="lg:hidden flex justify-center gap-6 mt-10 animate-fade-in-up opacity-0 stagger-2">
               <div className="relative">
                 <img src="/man_sending_message.png" alt="Sending" className="w-40 h-40 object-contain drop-shadow-lg" />
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-[#C1027D] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">📤 Send</div>
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-[#C1027D] text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1"><Send className="w-2 h-2" /> Send</div>
               </div>
               <div className="relative">
                 <img src="/woman_receiving_message.png" alt="Receiving" className="w-40 h-40 object-contain drop-shadow-lg" />
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-[#8A0260] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">📱 Receive</div>
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-[#8A0260] text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1"><Phone className="w-2 h-2" /> Receive</div>
               </div>
             </div>
           </div>
@@ -110,14 +109,14 @@ export default function Home() {
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { icon: '👤', value: '2,400+', label: 'Active Investors', color: 'from-[#C1027D] to-[#8A0260]' },
-                { icon: '🏢', value: '850+', label: 'Businesses Listed', color: 'from-[#E97BC4] to-[#C1027D]' },
-                { icon: '📝', value: '12K+', label: 'Posts Published', color: 'from-[#D93F9E] to-[#C1027D]' },
-                { icon: '🤝', value: '30K+', label: 'Connections Made', color: 'from-[#8A0260] to-[#3D0231]' },
+                { icon: Users, value: '2,400+', label: 'Active Investors', color: 'from-[#C1027D] to-[#8A0260]' },
+                { icon: Building2, value: '850+', label: 'Businesses Listed', color: 'from-[#E97BC4] to-[#C1027D]' },
+                { icon: FileEdit, value: '12K+', label: 'Posts Published', color: 'from-[#D93F9E] to-[#C1027D]' },
+                { icon: Handshake, value: '30K+', label: 'Connections Made', color: 'from-[#8A0260] to-[#3D0231]' },
               ].map((stat) => (
                 <div key={stat.label} className="text-center">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center text-white text-lg mx-auto mb-3`}>
-                    {stat.icon}
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center text-white mx-auto mb-3`}>
+                    <stat.icon className="w-5 h-5" />
                   </div>
                   <div className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-1">{stat.value}</div>
                   <div className="text-sm text-gray-500 font-medium">{stat.label}</div>
@@ -129,16 +128,32 @@ export default function Home() {
 
         {/* ── Option Cards ──────────────────────────────── */}
         <section className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Business Profiling */}
+            <Link
+              href="/business"
+              className="group relative bg-white rounded-2xl border border-[#f0e4ec] p-8 transition-all duration-300 hover:shadow-xl hover:border-[#F8CEE9] hover:-translate-y-1"
+            >
+              <div className="mb-6 group-hover:scale-110 transition-transform duration-300">
+                <Briefcase className="w-7 h-7 text-[#C1027D]" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Business Profiling</h3>
+              <p className="text-gray-500 text-sm leading-relaxed mb-6">
+                Create and discover businesses across Africa. List your company, services, and connect with customers.
+              </p>
+              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#C1027D] group-hover:gap-3 transition-all duration-300">
+                Explore
+                <ArrowRight className="w-4 h-4" />
+              </span>
+            </Link>
+
             {/* Blast Wizard */}
             <Link
               href="/messaging"
               className="group relative bg-white rounded-2xl border border-[#f0e4ec] p-8 transition-all duration-300 hover:shadow-xl hover:border-[#F8CEE9] hover:-translate-y-1"
             >
-              <div className="ring lime mb-6 group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.111.431-.173.869-.173 1.315 0 .447.062.884.173 1.315m0-9.665a24.301 24.301 0 003.484.045m-3.484 0a24.27 24.27 0 01-3.484-.045" />
-                </svg>
+              <div className="mb-6 group-hover:scale-110 transition-transform duration-300">
+                <Rocket className="w-7 h-7 text-[#C1027D]" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">Blast Wizard</h3>
               <p className="text-gray-500 text-sm leading-relaxed mb-6">
@@ -146,9 +161,7 @@ export default function Home() {
               </p>
               <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#C1027D] group-hover:gap-3 transition-all duration-300">
                 Get Started
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
+                <ArrowRight className="w-4 h-4" />
               </span>
             </Link>
 
@@ -157,10 +170,8 @@ export default function Home() {
               href="/poster/dashboard"
               className="group relative bg-white rounded-2xl border border-[#f0e4ec] p-8 transition-all duration-300 hover:shadow-xl hover:border-[#F8CEE9] hover:-translate-y-1"
             >
-              <div className="ring dark mb-6 group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                </svg>
+              <div className="mb-6 group-hover:scale-110 transition-transform duration-300">
+                <PenLine className="w-7 h-7 text-[#C1027D]" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">Post</h3>
               <p className="text-gray-500 text-sm leading-relaxed mb-6">
@@ -168,9 +179,7 @@ export default function Home() {
               </p>
               <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#C1027D] group-hover:gap-3 transition-all duration-300">
                 Get Started
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
+                <ArrowRight className="w-4 h-4" />
               </span>
             </Link>
           </div>
@@ -194,9 +203,7 @@ export default function Home() {
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-[#C1027D] font-bold px-8 py-4 rounded-xl hover:bg-[#FBEAF5] transition-all shadow-lg"
                 >
                   Create Free Account
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                  </svg>
+                  <ArrowRight className="w-5 h-5" />
                 </Link>
               </div>
             </div>
@@ -212,9 +219,9 @@ export default function Home() {
               <img src="/YoINFOlogo.png" alt="yoInfo" className="h-6" />
             </div>
             <div className="flex items-center gap-6 text-sm text-gray-500">
-              <Link href="/messaging" className="hover:text-[#C1027D] transition-colors">Blast</Link>
-              <Link href="/poster/dashboard" className="hover:text-[#C1027D] transition-colors">Post</Link>
-              <Link href="/business" className="hover:text-[#C1027D] transition-colors">Business</Link>
+              <Link href="/messaging" className="hover:text-[#C1027D] transition-colors flex items-center gap-1.5"><Rocket className="w-3.5 h-3.5" /> Blast</Link>
+              <Link href="/poster/dashboard" className="hover:text-[#C1027D] transition-colors flex items-center gap-1.5"><PenLine className="w-3.5 h-3.5" /> Post</Link>
+              <Link href="/business" className="hover:text-[#C1027D] transition-colors flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" /> Business</Link>
             </div>
             <p className="text-xs text-gray-400">
               &copy; {new Date().getFullYear()} yoInfo. All rights reserved.
