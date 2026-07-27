@@ -1008,7 +1008,6 @@ export default function MessagingDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-bold text-gray-900">Saved Contacts</h3>
-                    <p className="text-xs text-gray-400 mt-0.5">Contacts saved from your campaigns. Click a campaign to view and edit.</p>
                   </div>
                 </div>
 

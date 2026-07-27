@@ -144,7 +144,7 @@ export default function PosterDashboard() {
 
               <div className="card space-y-5">
                 <div>
-                  <h3 className="font-bold text-lg text-gray-900 mb-1">What offer do you have today?</h3>
+                  <h3 className="font-bold text-lg text-gray-900 mb-1">What update do you have today?</h3>
                 </div>
 
                 {/* Title */}
