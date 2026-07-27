@@ -5,13 +5,44 @@ import { useRouter } from 'next/navigation';
 import { login, register } from '@/lib/api';
 import Link from 'next/link';
 
+const COUNTRY_CODES = [
+  { code: '+250', country: 'RW', label: 'Rwanda' },
+  { code: '+254', country: 'KE', label: 'Kenya' },
+  { code: '+256', country: 'UG', label: 'Uganda' },
+  { code: '+255', country: 'TZ', label: 'Tanzania' },
+  { code: '+243', country: 'CD', label: 'DR Congo' },
+  { code: '+242', country: 'CG', label: 'Congo' },
+  { code: '+257', country: 'BI', label: 'Burundi' },
+  { code: '+253', country: 'DJ', label: 'Djibouti' },
+  { code: '+251', country: 'ET', label: 'Ethiopia' },
+  { code: '+252', country: 'SO', label: 'Somalia' },
+  { code: '+260', country: 'ZM', label: 'Zambia' },
+  { code: '+263', country: 'ZW', label: 'Zimbabwe' },
+  { code: '+27', country: 'ZA', label: 'South Africa' },
+  { code: '+234', country: 'NG', label: 'Nigeria' },
+  { code: '+233', country: 'GH', label: 'Ghana' },
+  { code: '+212', country: 'MA', label: 'Morocco' },
+  { code: '+216', country: 'TN', label: 'Tunisia' },
+  { code: '+20', country: 'EG', label: 'Egypt' },
+  { code: '+1', country: 'US', label: 'United States' },
+  { code: '+44', country: 'GB', label: 'United Kingdom' },
+  { code: '+33', country: 'FR', label: 'France' },
+  { code: '+49', country: 'DE', label: 'Germany' },
+  { code: '+91', country: 'IN', label: 'India' },
+  { code: '+86', country: 'CN', label: 'China' },
+  { code: '+971', country: 'AE', label: 'UAE' },
+];
+
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
+  const [phoneCode, setPhoneCode] = useState('+250');
   const [phone, setPhone] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -34,14 +65,15 @@ export default function AuthPage() {
           setIsLoading(false);
           return;
         }
-        await register(email, password, name, confirmPassword);
+        const fullPhone = phone ? `${phoneCode}${phone.replace(/\s/g, '')}` : undefined;
+        await register(email, password, name, confirmPassword, fullPhone);
         setSuccess('Account created successfully! Please sign in.');
         setIsLogin(true);
         setPassword('');
         setConfirmPassword('');
       }
     } catch (err: any) {
-      setError(err.message || (isLogin ? 'Failed to sign in.' : 'Failed to create account.'));
+      setError(err.message || (isLogin ? 'Failed to sign in.' : 'Failed to register.'));
     } finally {
       setIsLoading(false);
     }
@@ -133,7 +165,7 @@ export default function AuthPage() {
                     onChange={(e) => setName(e.target.value)}
                     className="input"
                     placeholder="Jane Doe"
-                    required={!isLogin}
+                    required
                   />
                 </div>
               )}
@@ -143,14 +175,28 @@ export default function AuthPage() {
                   <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-1.5">
                     Phone Number
                   </label>
-                  <input
-                    id="phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="input"
-                    placeholder="+250 7XX XXX XXX"
-                  />
+                  <div className="flex gap-2">
+                    <select
+                      value={phoneCode}
+                      onChange={(e) => setPhoneCode(e.target.value)}
+                      className="input shrink-0"
+                      style={{ width: '100px' }}
+                    >
+                      {COUNTRY_CODES.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.country} {c.code}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="input flex-1 min-w-0"
+                      placeholder="7XX XXX XXX"
+                    />
+                  </div>
                 </div>
               )}
 
@@ -180,16 +226,35 @@ export default function AuthPage() {
                     </button>
                   )}
                 </div>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="input"
-                  placeholder="••••••••"
-                  required
-                  minLength={6}
-                />
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="input pr-10"
+                    placeholder="••••••••"
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
 
               {!isLogin && (
@@ -197,16 +262,35 @@ export default function AuthPage() {
                   <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-1.5">
                     Confirm Password
                   </label>
-                  <input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="input"
-                    placeholder="••••••••"
-                    required={!isLogin}
-                    minLength={6}
-                  />
+                  <div className="relative">
+                    <input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="input pr-10"
+                      placeholder="••••••••"
+                      required
+                      minLength={6}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showConfirmPassword ? (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                   {confirmPassword && password !== confirmPassword && (
                     <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
                   )}
@@ -232,11 +316,11 @@ export default function AuthPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    {isLogin ? 'Signing in...' : 'Creating account...'}
+                    {isLogin ? 'Signing in...' : 'Registering...'}
                   </>
                 ) : (
                   <>
-                    {isLogin ? 'Login' : 'Create Account'}
+                    {isLogin ? 'Login' : 'Register'}
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                     </svg>
@@ -255,7 +339,7 @@ export default function AuthPage() {
                 onClick={() => { setIsLogin(!isLogin); setError(''); setSuccess(''); }}
                 className="text-sm font-semibold text-[#C1027D] hover:text-[#8A0260] transition-colors"
               >
-                {isLogin ? 'Create an account' : 'Sign in'}
+                {isLogin ? 'Register' : 'Login'}
               </button>
             </div>
           </div>

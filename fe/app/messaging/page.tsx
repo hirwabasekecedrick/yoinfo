@@ -4,12 +4,13 @@ import { useState, useRef, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import ToolLayout from '@/components/tool-layout';
 import ProtectedRoute from '@/components/protected-route';
-import { sendMessage, fetchCampaigns, uploadAttachment } from '@/lib/api';
+import { sendMessage, fetchCampaigns, fetchCampaign, resendCampaign, updateCampaignContacts, uploadAttachment } from '@/lib/api';
 import { API_URL } from '@/lib/config';
 
 const TOOL_NAV = [
-  { label: 'Dashboard', href: '/poster/dashboard', icon: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z' },
-  { label: 'Investments', href: '/investments', icon: 'M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941' },
+  { label: 'Update Wizard', href: '/poster/dashboard', icon: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z' },
+  { label: 'Blast Wizard', href: '/messaging', icon: 'M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.111.431-.173.869-.173 1.315 0 .447.062.884.173 1.315m0-9.665a24.301 24.301 0 003.484.045m-3.484 0a24.27 24.27 0 01-3.484-.045' },
+  { label: 'Business Profiling', href: '/business', icon: 'M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72l1.189-1.19A1.5 1.5 0 0113.5 9h1.5a1.5 1.5 0 011.5 1.5v8.25' },
 ];
 
 const CAMPAIGN_STEPS = ['Contacts', 'Channels', 'Message', 'Review'];
@@ -42,6 +43,7 @@ export default function MessagingDashboard() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [sendSuccess, setSendSuccess] = useState(false);
+  const [resendCampaignId, setResendCampaignId] = useState<string | null>(null);
 
   // File link
   const [fileUrl, setFileUrl] = useState('');
@@ -51,8 +53,21 @@ export default function MessagingDashboard() {
 
   // Campaigns (fetched from backend)
   const [campaigns, setCampaigns] = useState<{ id: string; name: string; status: string; recipients: number; channels: string[]; date: string }[]>([]);
+  const [fullCampaigns, setFullCampaigns] = useState<any[]>([]);
   const [campaignsPage, setCampaignsPage] = useState(1);
   const CAMPAIGNS_PER_PAGE = 5;
+
+  // Contacts tab
+  const [expandedCampaignId, setExpandedCampaignId] = useState<string | null>(null);
+  const [editingContact, setEditingContact] = useState<{ campaignId: string; index: number } | null>(null);
+  const [editContactName, setEditContactName] = useState('');
+  const [editContactPhone, setEditContactPhone] = useState('');
+  const [editContactEmail, setEditContactEmail] = useState('');
+  const [addContactName, setAddContactName] = useState('');
+  const [addContactPhone, setAddContactPhone] = useState('');
+  const [addContactEmail, setAddContactEmail] = useState('');
+  const [showAddContact, setShowAddContact] = useState<string | null>(null);
+  const [isSavingContacts, setIsSavingContacts] = useState(false);
 
   // Toast notification
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -111,6 +126,7 @@ export default function MessagingDashboard() {
     if (token) {
       fetchCampaigns(token)
         .then((data) => {
+          setFullCampaigns(data || []);
           const mapped = (data || []).map((c: any) => ({
             id: c.id,
             name: c.name,
@@ -207,20 +223,33 @@ export default function MessagingDashboard() {
       }
       const activeChannels = Object.entries(channels).filter(([, v]) => v).map(([k]) => k.toUpperCase());
       const fileLink = fileUrl ? `\n\nDownload file: ${API_URL}${fileUrl}` : '';
-      await sendMessage(token, {
-        name: campaignName,
-        emailSubject,
-        emailMessage: emailMessage + fileLink,
-        smsMessage,
-        whatsappMessage,
-        contacts,
-        channels: activeChannels,
-        cost: contacts.length * 20,
-      });
+
+      if (resendCampaignId) {
+        await resendCampaign(token, resendCampaignId, {
+          emailSubject,
+          emailMessage: emailMessage + fileLink,
+          smsMessage,
+          whatsappMessage,
+          channels: activeChannels,
+          cost: contacts.length * 20,
+        });
+      } else {
+        await sendMessage(token, {
+          name: campaignName,
+          emailSubject,
+          emailMessage: emailMessage + fileLink,
+          smsMessage,
+          whatsappMessage,
+          contacts,
+          channels: activeChannels,
+          cost: contacts.length * 20,
+        });
+      }
       setShowPaymentModal(false);
       setSendSuccess(true);
       fetchCampaigns(token)
         .then((data) => {
+          setFullCampaigns(data || []);
           const mapped = (data || []).map((c: any) => ({
             id: c.id,
             name: c.name,
@@ -243,7 +272,66 @@ export default function MessagingDashboard() {
   const resetForm = () => {
     setContacts([]); setEmailSubject(''); setEmailMessage(''); setSmsMessage(''); setWhatsappMessage(''); setCampaignName('');
     setChannels({ whatsapp: false, email: true, sms: false });
-    setStep(0); setAgreedToTerms(false); removeFileLink();
+    setStep(0); setAgreedToTerms(false); removeFileLink(); setResendCampaignId(null);
+  };
+
+  const refreshCampaigns = () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    fetchCampaigns(token)
+      .then((data) => {
+        setFullCampaigns(data || []);
+        const mapped = (data || []).map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          status: c.status?.toLowerCase() || 'sent',
+          recipients: c.recipients || 0,
+          channels: Array.isArray(c.channels) ? c.channels : [],
+          date: c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '',
+        }));
+        setCampaigns(mapped);
+      })
+      .catch(() => {});
+  };
+
+  const saveContacts = async (campaignId: string, updatedContacts: { name: string; phone: string; email: string }[]) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    setIsSavingContacts(true);
+    try {
+      await updateCampaignContacts(token, campaignId, updatedContacts);
+      refreshCampaigns();
+      showToast('Contacts updated!', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Failed to save contacts', 'error');
+    } finally {
+      setIsSavingContacts(false);
+    }
+  };
+
+  const handleResend = async (campaignId: string) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const campaign = await fetchCampaign(token, campaignId);
+      const savedContacts = Array.isArray(campaign.contacts) ? campaign.contacts : [];
+      setCampaignName(`${campaign.name} (resend)`);
+      setContacts(savedContacts);
+      setEmailSubject(campaign.emailSubject || '');
+      setEmailMessage(campaign.emailMessage || '');
+      setSmsMessage(campaign.smsMessage || '');
+      setWhatsappMessage(campaign.whatsappMessage || '');
+      setChannels({
+        email: (campaign.channels || []).includes('EMAIL'),
+        sms: (campaign.channels || []).includes('SMS'),
+        whatsapp: (campaign.channels || []).includes('WHATSAPP'),
+      });
+      setResendCampaignId(campaignId);
+      setStep(2);
+      setView('new-campaign');
+    } catch (err: any) {
+      showToast(err.message || 'Failed to load campaign', 'error');
+    }
   };
 
   const cost = contacts.length * 20;
@@ -251,8 +339,8 @@ export default function MessagingDashboard() {
   return (
     <ProtectedRoute>
       <ToolLayout
-        title="Blast Wizard"
-        subtitle="Upload contacts, write once — send everywhere."
+        title=""
+        subtitle=""
         navItems={TOOL_NAV}
       >
         {/* ── Sidebar Nav for Views ──────────────────────── */}
@@ -353,12 +441,13 @@ export default function MessagingDashboard() {
                           <th className="text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-5 py-3">Recipients</th>
                           <th className="text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-5 py-3">Channels</th>
                           <th className="text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-5 py-3">Date</th>
+                          <th className="text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-5 py-3">Action</th>
                         </tr>
                       </thead>
                       <tbody>
                         {campaignsPageData.length === 0 ? (
                           <tr>
-                            <td colSpan={5} className="text-center py-12">
+                            <td colSpan={6} className="text-center py-12">
                               <div className="flex flex-col items-center gap-3">
                                 <div className="w-12 h-12 rounded-full bg-[#FDF4FA] flex items-center justify-center">
                                   <svg className="w-6 h-6 text-[#E97BC4]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
@@ -398,6 +487,14 @@ export default function MessagingDashboard() {
                                 </div>
                               </td>
                               <td className="px-5 py-3.5 text-xs text-gray-400">{c.date}</td>
+                              <td className="px-5 py-3.5">
+                                <button
+                                  onClick={() => handleResend(c.id)}
+                                  className="text-xs font-semibold text-[#C1027D] hover:text-[#8A0260] transition-colors px-3 py-1.5 rounded-lg hover:bg-[#FDF4FA] border border-[#f0e4ec]"
+                                >
+                                  Resend
+                                </button>
+                              </td>
                             </tr>
                           ))
                         )}
@@ -413,7 +510,7 @@ export default function MessagingDashboard() {
             {view === 'new-campaign' && (
               <div className="space-y-6 animate-fade-in-up">
                 {/* Step Indicators */}
-                <div className="flex items-center gap-2">
+                {/* <div className="flex items-center gap-2">
                   {CAMPAIGN_STEPS.map((s, i) => (
                     <div key={s} className="flex items-center gap-2">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
@@ -425,7 +522,7 @@ export default function MessagingDashboard() {
                       {i < CAMPAIGN_STEPS.length - 1 && <div className="w-8 h-px bg-gray-200 mx-1" />}
                     </div>
                   ))}
-                </div>
+                </div> */}
 
                 {/* Step: Contacts */}
                 {step === 0 && (
@@ -554,7 +651,7 @@ export default function MessagingDashboard() {
                     </div>
 
                     {/* File Link */}
-                    <div className="card space-y-3">
+                    {/* <div className="card space-y-3">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center">
                           <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -610,7 +707,7 @@ export default function MessagingDashboard() {
                           </button>
                         </div>
                       )}
-                    </div>
+                    </div> */}
 
                     {/* Email composer */}
                     {channels.email && (
@@ -872,12 +969,12 @@ export default function MessagingDashboard() {
                 <div className="table-wrap">
                   <table>
                     <thead>
-                      <tr><th>Campaign</th><th>Status</th><th>Recipients</th><th>Channels</th><th>Date</th></tr>
+                      <tr><th>Campaign</th><th>Status</th><th>Recipients</th><th>Channels</th><th>Date</th><th>Action</th></tr>
                     </thead>
                     <tbody>
                       {campaignsPageData.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="text-center py-8 text-gray-400 text-sm">No campaigns found.</td>
+                          <td colSpan={6} className="text-center py-8 text-gray-400 text-sm">No campaigns found.</td>
                         </tr>
                       ) : (
                         campaignsPageData.map(c => (
@@ -887,6 +984,14 @@ export default function MessagingDashboard() {
                             <td>{c.recipients.toLocaleString()}</td>
                             <td>{c.channels.join(', ') || '—'}</td>
                             <td className="text-gray-400">{c.date}</td>
+                            <td>
+                              <button
+                                onClick={() => handleResend(c.id)}
+                                className="text-xs font-semibold text-[#C1027D] hover:text-[#8A0260] transition-colors px-3 py-1.5 rounded-lg hover:bg-[#FDF4FA] border border-[#f0e4ec]"
+                              >
+                                Resend
+                              </button>
+                            </td>
                           </tr>
                         ))
                       )}
@@ -901,23 +1006,182 @@ export default function MessagingDashboard() {
             {view === 'contacts' && (
               <div className="space-y-4 animate-fade-in-up">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-gray-900">Contact Lists</h3>
-                  <button className="btn btn-primary text-sm py-2 px-4">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    New List
-                  </button>
-                </div>
-                <div className="card text-center py-12">
-                  <div className="w-16 h-16 rounded-full bg-[#FBEAF5] flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-[#E97BC4]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-                    </svg>
+                  <div>
+                    <h3 className="font-bold text-gray-900">Saved Contacts</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">Contacts saved from your campaigns. Click a campaign to view and edit.</p>
                   </div>
-                  <h3 className="font-bold text-gray-900 mb-1">No contact lists yet</h3>
-                  <p className="text-sm text-gray-400">Create a new campaign to add contacts.</p>
                 </div>
+
+                {fullCampaigns.filter(c => Array.isArray(c.contacts) && c.contacts.length > 0).length === 0 ? (
+                  <div className="card text-center py-12">
+                    <div className="w-16 h-16 rounded-full bg-[#FBEAF5] flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-[#E97BC4]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="font-bold text-gray-900 mb-1">No saved contacts yet</h3>
+                    <p className="text-sm text-gray-400">Send a campaign to automatically save its contacts here.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {fullCampaigns.filter(c => Array.isArray(c.contacts) && c.contacts.length > 0).map((campaign) => {
+                      const isExpanded = expandedCampaignId === campaign.id;
+                      const campaignContacts: any[] = Array.isArray(campaign.contacts) ? campaign.contacts : [];
+                      return (
+                        <div key={campaign.id} className="bg-white border border-[#f0e4ec] rounded-2xl overflow-hidden">
+                          {/* Campaign header */}
+                          <button
+                            onClick={() => setExpandedCampaignId(isExpanded ? null : campaign.id)}
+                            className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#FDF4FA]/50 transition-colors text-left"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isExpanded ? 'bg-[#C1027D] text-white' : 'bg-[#FDF4FA] text-[#C1027D]'}`}>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                                </svg>
+                              </div>
+                              <div>
+                                <span className="text-sm font-bold text-gray-900">{campaign.name}</span>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-xs text-gray-400">{campaignContacts.length} contacts</span>
+                                  <span className="text-xs text-gray-300">|</span>
+                                  <span className="text-xs text-gray-400">{new Date(campaign.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <svg className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                            </svg>
+                          </button>
+
+                          {/* Expanded contacts table */}
+                          {isExpanded && (
+                            <div className="border-t border-[#f0e4ec]">
+                              <div className="overflow-x-auto">
+                                <table className="w-full">
+                                  <thead>
+                                    <tr className="bg-gray-50/50">
+                                      <th className="text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-5 py-2.5">Name</th>
+                                      <th className="text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-5 py-2.5">Phone</th>
+                                      <th className="text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-5 py-2.5">Email</th>
+                                      <th className="text-right text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-5 py-2.5">Actions</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {campaignContacts.map((contact: any, idx: number) => (
+                                      <tr key={idx} className={`border-t border-[#f0e4ec]/50 ${editingContact?.campaignId === campaign.id && editingContact?.index === idx ? 'bg-[#FDF4FA]' : 'hover:bg-gray-50/50'}`}>
+                                        <td className="px-5 py-2.5">
+                                          {editingContact?.campaignId === campaign.id && editingContact?.index === idx ? (
+                                            <input type="text" value={editContactName} onChange={e => setEditContactName(e.target.value)} className="input py-1.5 text-xs" />
+                                          ) : (
+                                            <span className="text-sm text-gray-900">{contact.name || '—'}</span>
+                                          )}
+                                        </td>
+                                        <td className="px-5 py-2.5">
+                                          {editingContact?.campaignId === campaign.id && editingContact?.index === idx ? (
+                                            <input type="tel" value={editContactPhone} onChange={e => setEditContactPhone(e.target.value)} className="input py-1.5 text-xs" />
+                                          ) : (
+                                            <span className="text-sm text-gray-600">{contact.phone || '—'}</span>
+                                          )}
+                                        </td>
+                                        <td className="px-5 py-2.5">
+                                          {editingContact?.campaignId === campaign.id && editingContact?.index === idx ? (
+                                            <input type="email" value={editContactEmail} onChange={e => setEditContactEmail(e.target.value)} className="input py-1.5 text-xs" />
+                                          ) : (
+                                            <span className="text-sm text-gray-600">{contact.email || '—'}</span>
+                                          )}
+                                        </td>
+                                        <td className="px-5 py-2.5 text-right">
+                                          {editingContact?.campaignId === campaign.id && editingContact?.index === idx ? (
+                                            <div className="flex items-center justify-end gap-1.5">
+                                              <button
+                                                onClick={() => {
+                                                  const updated = [...campaignContacts];
+                                                  updated[idx] = { name: editContactName, phone: editContactPhone, email: editContactEmail };
+                                                  saveContacts(campaign.id, updated);
+                                                  setEditingContact(null);
+                                                }}
+                                                className="text-xs font-semibold text-white bg-[#C1027D] hover:bg-[#8A0260] px-2.5 py-1 rounded-lg transition-colors"
+                                              >Save</button>
+                                              <button
+                                                onClick={() => setEditingContact(null)}
+                                                className="text-xs font-semibold text-gray-500 hover:text-gray-700 px-2.5 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+                                              >Cancel</button>
+                                            </div>
+                                          ) : (
+                                            <div className="flex items-center justify-end gap-1.5">
+                                              <button
+                                                onClick={() => {
+                                                  setEditingContact({ campaignId: campaign.id, index: idx });
+                                                  setEditContactName(contact.name || '');
+                                                  setEditContactPhone(contact.phone || '');
+                                                  setEditContactEmail(contact.email || '');
+                                                }}
+                                                className="text-xs font-semibold text-[#C1027D] hover:text-[#8A0260] px-2 py-1 rounded-lg hover:bg-[#FDF4FA] transition-colors"
+                                              >Edit</button>
+                                              <button
+                                                onClick={() => {
+                                                  if (confirm('Remove this contact from the campaign?')) {
+                                                    const updated = campaignContacts.filter((_: any, i: number) => i !== idx);
+                                                    saveContacts(campaign.id, updated);
+                                                  }
+                                                }}
+                                                className="text-xs font-semibold text-red-500 hover:text-red-700 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
+                                              >Remove</button>
+                                            </div>
+                                          )}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+
+                              {/* Add new contact row */}
+                              {showAddContact === campaign.id ? (
+                                <div className="border-t border-[#f0e4ec] px-5 py-3 bg-[#FDF4FA]/30">
+                                  <div className="grid grid-cols-3 gap-2 mb-2">
+                                    <input type="text" placeholder="Name" value={addContactName} onChange={e => setAddContactName(e.target.value)} className="input py-1.5 text-xs" />
+                                    <input type="tel" placeholder="Phone" value={addContactPhone} onChange={e => setAddContactPhone(e.target.value)} className="input py-1.5 text-xs" />
+                                    <input type="email" placeholder="Email" value={addContactEmail} onChange={e => setAddContactEmail(e.target.value)} className="input py-1.5 text-xs" />
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => {
+                                        if (!addContactName && !addContactPhone && !addContactEmail) return;
+                                        const updated = [...campaignContacts, { name: addContactName, phone: addContactPhone, email: addContactEmail }];
+                                        saveContacts(campaign.id, updated);
+                                        setAddContactName(''); setAddContactPhone(''); setAddContactEmail('');
+                                        setShowAddContact(null);
+                                      }}
+                                      className="text-xs font-semibold text-white bg-[#C1027D] hover:bg-[#8A0260] px-3 py-1.5 rounded-lg transition-colors"
+                                    >Add Contact</button>
+                                    <button
+                                      onClick={() => { setShowAddContact(null); setAddContactName(''); setAddContactPhone(''); setAddContactEmail(''); }}
+                                      className="text-xs font-semibold text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                                    >Cancel</button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="border-t border-[#f0e4ec] px-5 py-2.5">
+                                  <button
+                                    onClick={() => setShowAddContact(campaign.id)}
+                                    className="text-xs font-semibold text-[#C1027D] hover:text-[#8A0260] transition-colors flex items-center gap-1"
+                                  >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                    </svg>
+                                    Add Contact
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
@@ -990,7 +1254,7 @@ export default function MessagingDashboard() {
         {/* ── Success Toast ──────────────────────────────── */}
         {sendSuccess && (
           <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#C1027D] text-white px-6 py-3 rounded-xl shadow-lg font-semibold text-sm animate-fade-in-up z-50">
-            Campaign sent successfully!
+            {resendCampaignId ? 'Campaign resent successfully!' : 'Campaign sent successfully!'}
           </div>
         )}
       </ToolLayout>

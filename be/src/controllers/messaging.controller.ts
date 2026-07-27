@@ -16,7 +16,6 @@ export const sendBulkMessage = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    // Determine which channel-specific messages to use, with fallback to legacy `message` field
     const finalEmailMessage = emailMessage || message || '';
     const finalEmailSubject = emailSubject || name || 'Bulk Message';
     const finalSmsMessage = smsMessage || message || '';
@@ -31,7 +30,6 @@ export const sendBulkMessage = async (req: AuthRequest, res: Response): Promise<
     let sendEmail = channels.includes('EMAIL');
     let sendWhatsapp = channels.includes('WHATSAPP');
 
-    // Filter contacts by channel capability
     const contactsWithEmail = contacts.filter((c: any) => c.email && c.email.trim());
     const contactsWithPhone = contacts.filter((c: any) => c.phone && c.phone.trim());
 
@@ -57,10 +55,15 @@ export const sendBulkMessage = async (req: AuthRequest, res: Response): Promise<
       data: {
         name: name || 'Untitled Campaign',
         message: finalEmailMessage || finalSmsMessage || finalWhatsappMessage,
+        emailSubject: finalEmailSubject,
+        emailMessage: finalEmailMessage || null,
+        smsMessage: finalSmsMessage || null,
+        whatsappMessage: finalWhatsappMessage || null,
         channels: channels || [],
         status: 'SENT',
         recipients: contacts.length,
         cost: cost || 0,
+        contacts: contacts as any,
         authorId: req.user.id,
       }
     });
@@ -88,5 +91,145 @@ export const getCampaigns = async (req: AuthRequest, res: Response): Promise<voi
   } catch (error) {
     console.error('Failed to fetch campaigns:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getCampaign = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const id = String(req.params.id);
+    const campaign = await prisma.campaign.findFirst({
+      where: { id, authorId: req.user.id }
+    });
+
+    if (!campaign) {
+      res.status(404).json({ error: 'Campaign not found' });
+      return;
+    }
+
+    res.json(campaign);
+  } catch (error) {
+    console.error('Failed to fetch campaign:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const resendCampaign = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const id = String(req.params.id);
+    const original = await prisma.campaign.findFirst({
+      where: { id, authorId: req.user.id }
+    });
+
+    if (!original) {
+      res.status(404).json({ error: 'Campaign not found' });
+      return;
+    }
+
+    const contacts = (original.contacts as any[]) || [];
+    if (contacts.length === 0) {
+      res.status(400).json({ error: 'No contacts saved for this campaign. Cannot resend.' });
+      return;
+    }
+
+    const { emailSubject, emailMessage, smsMessage, whatsappMessage, channels, cost } = req.body;
+
+    const finalEmailMessage = emailMessage || original.emailMessage || '';
+    const finalEmailSubject = emailSubject || original.emailSubject || original.name;
+    const finalSmsMessage = smsMessage || original.smsMessage || '';
+    const finalWhatsappMessage = whatsappMessage || original.whatsappMessage || '';
+    const finalChannels = channels || original.channels;
+
+    if (!finalEmailMessage && !finalSmsMessage && !finalWhatsappMessage) {
+      res.status(400).json({ error: 'Message content is required' });
+      return;
+    }
+
+    const contactsWithEmail = contacts.filter((c: any) => c.email && c.email.trim());
+    const contactsWithPhone = contacts.filter((c: any) => c.phone && c.phone.trim());
+
+    if (finalChannels.includes('EMAIL') && finalEmailMessage && contactsWithEmail.length > 0) {
+      console.log(`[EMAIL] Resending to ${contactsWithEmail.length} contacts`);
+      await messagingService.sendEmails(contactsWithEmail, finalEmailSubject, finalEmailMessage);
+    }
+
+    if (finalChannels.includes('SMS') && finalSmsMessage && contactsWithPhone.length > 0) {
+      console.log(`[SMS] Resending to ${contactsWithPhone.length} contacts`);
+      await messagingService.sendSmsBatch(contactsWithPhone, finalSmsMessage);
+    }
+
+    if (finalChannels.includes('WHATSAPP') && finalWhatsappMessage) {
+      await messagingService.sendWhatsApp(contacts, finalWhatsappMessage);
+    }
+
+    const campaign = await prisma.campaign.create({
+      data: {
+        name: `${original.name} (resend)`,
+        message: finalEmailMessage || finalSmsMessage || finalWhatsappMessage,
+        emailSubject: finalEmailSubject,
+        emailMessage: finalEmailMessage || null,
+        smsMessage: finalSmsMessage || null,
+        whatsappMessage: finalWhatsappMessage || null,
+        channels: finalChannels,
+        status: 'SENT',
+        recipients: contacts.length,
+        cost: cost || original.cost || 0,
+        contacts: contacts as any,
+        authorId: req.user.id,
+      }
+    });
+
+    res.status(200).json({ success: true, campaign });
+  } catch (error) {
+    console.error('Failed to resend campaign:', error);
+    res.status(500).json({ error: 'Internal server error while resending campaign' });
+  }
+};
+
+export const updateCampaignContacts = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const id = String(req.params.id);
+    const { contacts } = req.body;
+
+    if (!contacts || !Array.isArray(contacts)) {
+      res.status(400).json({ error: 'Contacts must be an array' });
+      return;
+    }
+
+    const campaign = await prisma.campaign.findFirst({
+      where: { id, authorId: req.user.id }
+    });
+
+    if (!campaign) {
+      res.status(404).json({ error: 'Campaign not found' });
+      return;
+    }
+
+    const updated = await prisma.campaign.update({
+      where: { id },
+      data: {
+        contacts: contacts as any,
+        recipients: contacts.length,
+      }
+    });
+
+    res.status(200).json({ success: true, campaign: updated });
+  } catch (error) {
+    console.error('Failed to update campaign contacts:', error);
+    res.status(500).json({ error: 'Internal server error while updating contacts' });
   }
 };

@@ -14,6 +14,7 @@ model User {
   email     String   @unique
   password  String
   name      String?
+  phone     String?
   role      Role     @default(POSTER)
   posts     Post[]
   investments Investment[]
@@ -141,15 +142,20 @@ enum Role {
 }
 
 model Campaign {
-  id          String   @id @default(uuid())
-  name        String
-  message     String
-  channels    String[] // e.g., ["EMAIL", "SMS"]
-  status      String   @default("SENT") // SENT, FAILED, SCHEDULED
-  recipients  Int      @default(0)
-  cost        Float    @default(0)
-  authorId    String
-  author      User     @relation(fields: [authorId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(uuid())
+  name            String
+  message         String
+  emailSubject    String?
+  emailMessage    String?
+  smsMessage      String?
+  whatsappMessage String?
+  channels        String[] // e.g., ["EMAIL", "SMS"]
+  status          String   @default("SENT") // SENT, FAILED, SCHEDULED
+  recipients      Int      @default(0)
+  cost            Float    @default(0)
+  contacts        Json?    // saved contacts array for resend
+  authorId        String
+  author          User     @relation(fields: [authorId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

@@ -86,11 +86,11 @@ export async function login(email: string, password: string) {
   return res.json();
 }
 
-export async function register(email: string, password: string, name: string, confirmPassword: string) {
+export async function register(email: string, password: string, name: string, confirmPassword: string, phone?: string) {
   const res = await fetch(`${API_URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, name, confirmPassword }),
+    body: JSON.stringify({ email, password, name, confirmPassword, phone }),
   });
   if (!res.ok) {
     const error = await res.json();
@@ -151,6 +151,64 @@ export async function fetchCampaigns(token: string) {
   if (!res.ok) {
     const error = await res.json();
     throw new Error(error.error || 'Failed to fetch campaigns');
+  }
+  return res.json();
+}
+
+export async function fetchCampaign(token: string, id: string) {
+  const res = await fetch(`${API_URL}/api/messaging/campaigns/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || 'Failed to fetch campaign');
+  }
+  return res.json();
+}
+
+export async function resendCampaign(
+  token: string,
+  campaignId: string,
+  data: {
+    emailSubject?: string;
+    emailMessage?: string;
+    smsMessage?: string;
+    whatsappMessage?: string;
+    channels?: string[];
+    cost?: number;
+  }
+) {
+  const res = await fetch(`${API_URL}/api/messaging/campaigns/${campaignId}/resend`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || 'Failed to resend campaign');
+  }
+  return res.json();
+}
+
+export async function updateCampaignContacts(
+  token: string,
+  campaignId: string,
+  contacts: { name: string; phone: string; email: string }[]
+) {
+  const res = await fetch(`${API_URL}/api/messaging/campaigns/${campaignId}/contacts`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ contacts }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || 'Failed to update contacts');
   }
   return res.json();
 }

@@ -7,7 +7,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password, name, role, confirmPassword } = req.body;
+    const { email, password, name, role, confirmPassword, phone } = req.body;
     
     if (!email || !password || password.length < 6) {
       res.status(400).json({ error: 'Valid email and password (min 6 chars) are required' });
@@ -32,6 +32,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         password: hashedPassword,
         name,
         role: role || 'POSTER',
+        phone: phone || null,
       },
     });
 

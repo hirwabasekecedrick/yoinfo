@@ -16,14 +16,14 @@ export default function Home() {
             <Link href="/" className="text-sm font-medium text-gray-500 hover:text-[#C1027D] px-2 sm:px-3 py-2 rounded-lg hover:bg-[#FBEAF5] transition-colors hidden sm:block">
               Home
             </Link>
-            <Link href="/investments" className="text-sm font-medium text-gray-500 hover:text-[#C1027D] px-2 sm:px-3 py-2 rounded-lg hover:bg-[#FBEAF5] transition-colors hidden sm:block">
-              Investments
+            <Link href="/business" className="text-sm font-medium text-gray-500 hover:text-[#C1027D] px-2 sm:px-3 py-2 rounded-lg hover:bg-[#FBEAF5] transition-colors hidden sm:block">
+              Business
             </Link>
             <Link href="/messaging" className="text-sm font-medium text-gray-500 hover:text-[#C1027D] px-2 sm:px-3 py-2 rounded-lg hover:bg-[#FBEAF5] transition-colors hidden sm:block">
-              Blast
+              Blast Wizard
             </Link>
             <Link href="/poster/dashboard" className="text-sm font-medium text-gray-500 hover:text-[#C1027D] px-2 sm:px-3 py-2 rounded-lg hover:bg-[#FBEAF5] transition-colors hidden sm:block">
-              Social Media Automation
+              Update Wizard
             </Link>
             <Link
               href="/auth"
@@ -129,29 +129,7 @@ export default function Home() {
 
         {/* ── Option Cards ──────────────────────────────── */}
         <section className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Investments */}
-            <Link
-              href="/investments"
-              className="group relative bg-white rounded-2xl border border-[#f0e4ec] p-8 transition-all duration-300 hover:shadow-xl hover:border-[#F8CEE9] hover:-translate-y-1"
-            >
-              <div className="ring green mb-6 group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Investments</h3>
-              <p className="text-gray-500 text-sm leading-relaxed mb-6">
-                Discover high-potential investment opportunities across real estate, tech, agriculture, and more.
-              </p>
-              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#C1027D] group-hover:gap-3 transition-all duration-300">
-                Get Started
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
-              </span>
-            </Link>
-
+          <div className="grid md:grid-cols-2 gap-8">
             {/* Blast Wizard */}
             <Link
               href="/messaging"
@@ -220,12 +198,6 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                   </svg>
                 </Link>
-                <Link
-                  href="/investments"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white/20 text-white font-semibold px-8 py-4 rounded-xl hover:bg-white/30 transition-all border border-white/20"
-                >
-                  Browse Investments
-                </Link>
               </div>
             </div>
           </div>
@@ -240,7 +212,6 @@ export default function Home() {
               <img src="/YoINFOlogo.png" alt="yoInfo" className="h-6" />
             </div>
             <div className="flex items-center gap-6 text-sm text-gray-500">
-              <Link href="/investments" className="hover:text-[#C1027D] transition-colors">Investments</Link>
               <Link href="/messaging" className="hover:text-[#C1027D] transition-colors">Blast</Link>
               <Link href="/poster/dashboard" className="hover:text-[#C1027D] transition-colors">Post</Link>
               <Link href="/business" className="hover:text-[#C1027D] transition-colors">Business</Link>
