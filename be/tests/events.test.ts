@@ -1,15 +1,14 @@
 import request from 'supertest';
 import app from '../src/app';
+import { registerAndLogin } from './helpers';
 
 describe('Events Endpoints', () => {
   let authToken: string;
   let eventId: string;
 
   beforeAll(async () => {
-    const loginRes = await request(app)
-      .post('/auth/login')
-      .send({ email: 'alice@example.com', password: 'password123' });
-    authToken = loginRes.body.token;
+    const { token } = await registerAndLogin();
+    authToken = token;
   });
 
   describe('GET /api/events', () => {

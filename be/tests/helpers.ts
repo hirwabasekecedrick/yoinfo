@@ -1,4 +1,6 @@
 import jwt from 'jsonwebtoken';
+import request from 'supertest';
+import app from '../src/app';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'infopulse-super-secret-jwt-key-change-in-production';
 
@@ -34,4 +36,36 @@ export function posterToken(): string {
 
 export function adminToken(): string {
   return generateToken(TEST_ADMIN);
+}
+
+let testCounter = 0;
+
+export async function registerAndLogin(role: string = 'POSTER'): Promise<{ token: string; userId: string; email: string }> {
+  const unique = Date.now() + '-' + (testCounter++);
+  const email = `test-${unique}@example.com`;
+  const password = 'testpass123';
+
+  const registerRes = await request(app)
+    .post('/auth/register')
+    .send({
+      email,
+      password,
+      confirmPassword: password,
+      name: `Test User ${unique}`,
+      role,
+    });
+
+  if (registerRes.status !== 201) {
+    throw new Error(`Failed to register test user: ${registerRes.status} ${JSON.stringify(registerRes.body)}`);
+  }
+
+  const loginRes = await request(app)
+    .post('/auth/login')
+    .send({ email, password });
+
+  if (loginRes.status !== 200) {
+    throw new Error(`Failed to login test user: ${loginRes.status} ${JSON.stringify(loginRes.body)}`);
+  }
+
+  return { token: loginRes.body.token, userId: loginRes.body.user.id, email };
 }

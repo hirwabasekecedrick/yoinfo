@@ -1,15 +1,29 @@
 import request from 'supertest';
 import app from '../src/app';
+import { registerAndLogin } from './helpers';
 
 describe('Businesses Endpoints', () => {
   let authToken: string;
   let businessId: string;
 
   beforeAll(async () => {
-    const loginRes = await request(app)
-      .post('/auth/login')
-      .send({ email: 'alice@example.com', password: 'password123' });
-    authToken = loginRes.body.token;
+    const { token } = await registerAndLogin();
+    authToken = token;
+
+    await request(app)
+      .post('/api/businesses')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({
+        name: 'Seed Business',
+        category: 'Technology',
+        tagline: 'A seed business',
+        description: 'Seed business description',
+        phone: '+250 788 000 001',
+        email: 'seed@business.rw',
+        city: 'Kigali',
+        country: 'Rwanda',
+        services: ['Seed Service'],
+      });
   });
 
   describe('GET /api/businesses', () => {
@@ -32,21 +46,22 @@ describe('Businesses Endpoints', () => {
 
       expect(res.status).toBe(200);
       expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body.length).toBeGreaterThan(0);
       res.body.forEach((biz: any) => {
         expect(biz.category).toBe('Technology');
       });
     });
 
     it('should search by name', async () => {
-      const res = await request(app).get('/api/businesses?search=HeHe');
+      const res = await request(app).get('/api/businesses?search=Seed');
 
       expect(res.status).toBe(200);
       expect(res.body.length).toBe(1);
-      expect(res.body[0].name).toBe('HeHe Labs');
+      expect(res.body[0].name).toBe('Seed Business');
     });
 
     it('should search by description', async () => {
-      const res = await request(app).get('/api/businesses?search=coffee');
+      const res = await request(app).get('/api/businesses?search=seed');
 
       expect(res.status).toBe(200);
       expect(res.body.length).toBeGreaterThanOrEqual(1);

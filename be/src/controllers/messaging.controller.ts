@@ -3,6 +3,14 @@ import { prisma } from '../config/db';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { messagingService } from '../services/messaging.service';
 
+type SendResult = { success: boolean; totalSent: number; failed: string[] };
+
+function everyResultFailed(results: (SendResult | null)[]): boolean {
+  const valid = results.filter(Boolean) as SendResult[];
+  if (valid.length === 0) return false;
+  return valid.every(r => r.totalSent === 0 && r.failed.length > 0);
+}
+
 export const sendBulkMessage = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { name, message, emailSubject, emailMessage, smsMessage, whatsappMessage, contacts, channels, cost } = req.body;
@@ -33,22 +41,37 @@ export const sendBulkMessage = async (req: AuthRequest, res: Response): Promise<
     const contactsWithEmail = contacts.filter((c: any) => c.email && c.email.trim());
     const contactsWithPhone = contacts.filter((c: any) => c.phone && c.phone.trim());
 
+    let emailResult: { success: boolean; totalSent: number; failed: string[] } | null = null;
+    let smsResult: { success: boolean; totalSent: number; failed: string[]; parts?: number } | null = null;
+
     if (sendEmail && finalEmailMessage && contactsWithEmail.length > 0) {
-      console.log(`[EMAIL] Sending to ${contactsWithEmail.length} contacts with email addresses`);
-      await messagingService.sendEmails(contactsWithEmail, finalEmailSubject, finalEmailMessage);
+      console.log(`[EMAIL] Sending to ${contactsWithEmail.length} contacts`);
+      emailResult = await messagingService.sendEmails(contactsWithEmail, finalEmailSubject, finalEmailMessage);
+      console.log(`[EMAIL] Result: ${emailResult.totalSent} sent, ${emailResult.failed.length} failed`);
     } else if (sendEmail && contactsWithEmail.length === 0) {
-      console.warn('[EMAIL] No contacts with email addresses found — skipping email send');
+      console.warn('[EMAIL] No contacts with email addresses — skipping');
     }
-    
+
     if (sendSms && finalSmsMessage && contactsWithPhone.length > 0) {
-      console.log(`[SMS] Sending to ${contactsWithPhone.length} contacts with phone numbers`);
-      await messagingService.sendSmsBatch(contactsWithPhone, finalSmsMessage);
+      console.log(`[SMS] Sending to ${contactsWithPhone.length} contacts`);
+      smsResult = await messagingService.sendSmsBatch(contactsWithPhone, finalSmsMessage);
+      console.log(`[SMS] Result: ${smsResult.totalSent} sent, ${smsResult.failed.length} failed`);
     } else if (sendSms && contactsWithPhone.length === 0) {
-      console.warn('[SMS] No contacts with phone numbers found — skipping SMS send');
+      console.warn('[SMS] No contacts with phone numbers — skipping');
     }
 
     if (sendWhatsapp && finalWhatsappMessage) {
       await messagingService.sendWhatsApp(contacts, finalWhatsappMessage);
+    }
+
+    // Determine campaign status based on actual results
+    const allResults = [emailResult, smsResult].filter(Boolean);
+    let campaignStatus = 'SENT';
+    if (allResults.length > 0) {
+      const anyFailed = allResults.some(r => r!.failed.length > 0);
+      const allFailed = everyResultFailed(allResults);
+      if (allFailed) campaignStatus = 'FAILED';
+      else if (anyFailed) campaignStatus = 'PARTIAL';
     }
 
     const campaign = await prisma.campaign.create({
@@ -60,7 +83,7 @@ export const sendBulkMessage = async (req: AuthRequest, res: Response): Promise<
         smsMessage: finalSmsMessage || null,
         whatsappMessage: finalWhatsappMessage || null,
         channels: channels || [],
-        status: 'SENT',
+        status: campaignStatus,
         recipients: contacts.length,
         cost: cost || 0,
         contacts: contacts as any,
@@ -68,7 +91,14 @@ export const sendBulkMessage = async (req: AuthRequest, res: Response): Promise<
       }
     });
 
-    res.status(200).json({ success: true, campaign });
+    res.status(200).json({
+      success: true,
+      campaign,
+      results: {
+        email: emailResult,
+        sms: smsResult ? { totalSent: smsResult.totalSent, failed: smsResult.failed, parts: smsResult.parts } : null,
+      },
+    });
   } catch (error) {
     console.error('Failed to send bulk message:', error);
     res.status(500).json({ error: 'Internal server error while sending bulk message' });
@@ -157,18 +187,31 @@ export const resendCampaign = async (req: AuthRequest, res: Response): Promise<v
     const contactsWithEmail = contacts.filter((c: any) => c.email && c.email.trim());
     const contactsWithPhone = contacts.filter((c: any) => c.phone && c.phone.trim());
 
+    let emailResult: SendResult | null = null;
+    let smsResult: (SendResult & { parts?: number }) | null = null;
+
     if (finalChannels.includes('EMAIL') && finalEmailMessage && contactsWithEmail.length > 0) {
       console.log(`[EMAIL] Resending to ${contactsWithEmail.length} contacts`);
-      await messagingService.sendEmails(contactsWithEmail, finalEmailSubject, finalEmailMessage);
+      emailResult = await messagingService.sendEmails(contactsWithEmail, finalEmailSubject, finalEmailMessage);
     }
 
     if (finalChannels.includes('SMS') && finalSmsMessage && contactsWithPhone.length > 0) {
       console.log(`[SMS] Resending to ${contactsWithPhone.length} contacts`);
-      await messagingService.sendSmsBatch(contactsWithPhone, finalSmsMessage);
+      smsResult = await messagingService.sendSmsBatch(contactsWithPhone, finalSmsMessage);
     }
 
     if (finalChannels.includes('WHATSAPP') && finalWhatsappMessage) {
       await messagingService.sendWhatsApp(contacts, finalWhatsappMessage);
+    }
+
+    // Determine campaign status based on actual results
+    const allResults = [emailResult, smsResult].filter(Boolean);
+    let campaignStatus = 'SENT';
+    if (allResults.length > 0) {
+      const anyFailed = allResults.some(r => r!.failed.length > 0);
+      const allFailed = everyResultFailed(allResults);
+      if (allFailed) campaignStatus = 'FAILED';
+      else if (anyFailed) campaignStatus = 'PARTIAL';
     }
 
     const campaign = await prisma.campaign.create({
@@ -180,7 +223,7 @@ export const resendCampaign = async (req: AuthRequest, res: Response): Promise<v
         smsMessage: finalSmsMessage || null,
         whatsappMessage: finalWhatsappMessage || null,
         channels: finalChannels,
-        status: 'SENT',
+        status: campaignStatus,
         recipients: contacts.length,
         cost: cost || original.cost || 0,
         contacts: contacts as any,
@@ -188,7 +231,14 @@ export const resendCampaign = async (req: AuthRequest, res: Response): Promise<v
       }
     });
 
-    res.status(200).json({ success: true, campaign });
+    res.status(200).json({
+      success: true,
+      campaign,
+      results: {
+        email: emailResult,
+        sms: smsResult ? { totalSent: smsResult.totalSent, failed: smsResult.failed, parts: smsResult.parts } : null,
+      },
+    });
   } catch (error) {
     console.error('Failed to resend campaign:', error);
     res.status(500).json({ error: 'Internal server error while resending campaign' });

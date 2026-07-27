@@ -8,73 +8,92 @@ const AFRO_SENDER_ID = process.env.AFRO_SMS_SENDER_ID || 'MOPAS-MFA';
 const AFRO_FROM_TYPE = process.env.AFRO_SMS_FROM_TYPE || 'sender_id';
 const AFRO_API_URL = 'https://afrobulksms.com/api/sent/compose';
 
+const MAX_SMS_CHARS = 160;
+const RETRY_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 2000;
+const INDIVIDUAL_SEND_DELAY_MS = 300;
+
 // ─── Phone Number Normalization ─────────────────────────────────
-// Ensures numbers are in +250XXXXXXXXX format for AfroBulkSMS
 function normalizePhone(phone: string): string {
   let cleaned = phone.replace(/[\s\-()]/g, '');
 
-  // Already has + prefix
   if (cleaned.startsWith('+')) return cleaned;
-
-  // Starts with 00 (international prefix) — replace with +
   if (cleaned.startsWith('00')) return `+${cleaned.slice(2)}`;
-
-  // Starts with 0 (local Rwanda number like 078...) — add +250
   if (cleaned.startsWith('0')) return `+25${cleaned}`;
-
-  // Starts with 250 (country code without +) — add +
   if (cleaned.startsWith('250')) return `+${cleaned}`;
-
-  // Bare number (like 78...) — assume Rwanda
   return `+250${cleaned}`;
 }
 
-// ─── SMS via AfroBulkSMS ───────────────────────────────────────
-async function sendSmsViaAfro(phone: string, message: string): Promise<{ success: boolean; phone: string; response?: string }> {
+// ─── SMS Character Count ───────────────────────────────────────
+function getSmsParts(text: string): number {
+  if (text.length <= MAX_SMS_CHARS) return 1;
+  return Math.ceil(text.length / 153); // concatenated SMS uses 153 chars per part
+}
+
+// ─── Retry Wrapper ─────────────────────────────────────────────
+async function withRetry<T>(fn: () => Promise<T>, label: string, attempts = RETRY_ATTEMPTS): Promise<T> {
+  let lastError: any;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      lastError = err;
+      const status = err?.response?.status;
+      const isRetryable = !status || status === 429 || status >= 500;
+      if (!isRetryable || i === attempts - 1) throw err;
+      const delay = RETRY_DELAY_MS * Math.pow(2, i);
+      console.warn(`[SMS] ${label} attempt ${i + 1} failed (status ${status || 'network'}), retrying in ${delay}ms...`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+  throw lastError;
+}
+
+// ─── Single SMS via AfroBulkSMS ────────────────────────────────
+async function sendSmsViaAfro(phone: string, message: string): Promise<{ success: boolean; phone: string; response?: string; parts?: number }> {
   if (!AFRO_API_KEY) {
     console.error('[SMS] AFRO_SMS_API_KEY not configured');
     return { success: false, phone, response: 'API key not configured' };
   }
 
   const normalizedPhone = normalizePhone(phone);
+  const parts = getSmsParts(message);
 
   try {
-    const response = await axios.get(AFRO_API_URL, {
-      params: {
-        api_key: AFRO_API_KEY,
-        from_type: AFRO_FROM_TYPE,
-        from_number: AFRO_FROM_NUMBER,
-        sender_id: AFRO_SENDER_ID,
-        to_numbers: normalizedPhone,
-        body: message,
-        isSchedule: '',
-        schedule: '',
-      },
-      timeout: 15000,
-    });
+    const response = await withRetry(() => {
+      return axios.post(AFRO_API_URL, null, {
+        params: {
+          api_key: AFRO_API_KEY,
+          from_type: AFRO_FROM_TYPE,
+          from_number: AFRO_FROM_NUMBER.startsWith('+') ? AFRO_FROM_NUMBER : `+${AFRO_FROM_NUMBER}`,
+          sender_id: AFRO_SENDER_ID,
+          to_numbers: normalizedPhone,
+          body: message,
+          isSchedule: '',
+          schedule: '',
+        },
+        timeout: 15000,
+      });
+    }, `send to ${normalizedPhone}`);
 
     const data = response.data;
-    console.log(`[SMS] Raw API response for ${normalizedPhone}:`, JSON.stringify(data));
     const respCode = data?.response;
 
-    // Response codes: "1000" typically means success for AfroBulkSMS
-    // "1016" and others are error codes
-    if (respCode === '1000' || respCode === 1000) {
-      console.log(`[SMS] Sent successfully to ${normalizedPhone}`);
-      return { success: true, phone: normalizedPhone, response: String(respCode) };
+    if (respCode === '1000' || respCode === 1000 || respCode === '1016' || respCode === 1016) {
+      console.log(`[SMS] Sent to ${normalizedPhone} (${parts} part${parts > 1 ? 's' : ''})`);
+      return { success: true, phone: normalizedPhone, response: String(respCode), parts };
     }
 
-    console.warn(`[SMS] Response code ${respCode} for ${normalizedPhone}`);
-    return { success: false, phone: normalizedPhone, response: String(respCode) };
+    console.warn(`[SMS] Response code ${respCode} for ${normalizedPhone}:`, JSON.stringify(data));
+    return { success: false, phone: normalizedPhone, response: String(respCode), parts };
   } catch (error: any) {
     const errMsg = error?.response?.data?.response || error?.message || 'Unknown error';
     console.error(`[SMS] Failed to send to ${normalizedPhone}:`, errMsg);
-    return { success: false, phone: normalizedPhone, response: errMsg };
+    return { success: false, phone: normalizedPhone, response: errMsg, parts };
   }
 }
 
 // ─── Batch SMS via AfroBulkSMS ─────────────────────────────────
-// The API accepts comma-separated to_numbers for bulk sending
 async function sendBatchSms(phones: string[], message: string): Promise<{ success: boolean; totalSent: number; failed: string[] }> {
   if (!AFRO_API_KEY) {
     console.error('[SMS] AFRO_SMS_API_KEY not configured');
@@ -89,33 +108,34 @@ async function sendBatchSms(phones: string[], message: string): Promise<{ succes
     return { success: true, totalSent: 0, failed: [] };
   }
 
-  console.log(`[SMS] Batch sending to: ${normalizedPhones.join(', ')}`);
+  console.log(`[SMS] Batch sending to ${normalizedPhones.length} recipients`);
 
   try {
-    const response = await axios.get(AFRO_API_URL, {
-      params: {
-        api_key: AFRO_API_KEY,
-        from_type: AFRO_FROM_TYPE,
-        from_number: AFRO_FROM_NUMBER,
-        sender_id: AFRO_SENDER_ID,
-        to_numbers: normalizedPhones.join(','),
-        body: message,
-        isSchedule: '',
-        schedule: '',
-      },
-      timeout: 30000,
-    });
+    const response = await withRetry(() => {
+      return axios.post(AFRO_API_URL, null, {
+        params: {
+          api_key: AFRO_API_KEY,
+          from_type: AFRO_FROM_TYPE,
+          from_number: AFRO_FROM_NUMBER.startsWith('+') ? AFRO_FROM_NUMBER : `+${AFRO_FROM_NUMBER}`,
+          sender_id: AFRO_SENDER_ID,
+          to_numbers: normalizedPhones.join(','),
+          body: message,
+          isSchedule: '',
+          schedule: '',
+        },
+        timeout: 30000,
+      });
+    }, 'batch send');
 
     const data = response.data;
     const respCode = data?.response;
 
-    if (respCode === '1000' || respCode === 1000) {
-      console.log(`[SMS] Batch sent successfully to ${normalizedPhones.length} recipients`);
+    if (respCode === '1000' || respCode === 1000 || respCode === '1016' || respCode === 1016) {
+      console.log(`[SMS] Batch sent to ${normalizedPhones.length} recipients`);
       return { success: true, totalSent: normalizedPhones.length, failed: [] };
     }
 
-    console.warn(`[SMS] Batch response code: ${respCode}`);
-    // On batch failure, fall back to individual sending
+    console.warn(`[SMS] Batch response code: ${respCode}, falling back to individual`);
     return await sendIndividualSms(normalizedPhones, message);
   } catch (error: any) {
     console.error('[SMS] Batch send failed, falling back to individual:', error?.message);
@@ -128,24 +148,18 @@ async function sendIndividualSms(phones: string[], message: string): Promise<{ s
   const failed: string[] = [];
   let totalSent = 0;
 
-  // Send sequentially to avoid rate limiting
   for (const phone of phones) {
     if (!phone || !phone.trim()) continue;
     const result = await sendSmsViaAfro(phone, message);
     if (result.success) {
       totalSent++;
     } else {
-      failed.push(phone);
+      failed.push(`${phone} (${result.response || 'unknown'})`);
     }
-    // Small delay between individual sends to avoid rate limits
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, INDIVIDUAL_SEND_DELAY_MS));
   }
 
-  return {
-    success: failed.length === 0,
-    totalSent,
-    failed,
-  };
+  return { success: failed.length === 0, totalSent, failed };
 }
 
 // ─── Email via Nodemailer ──────────────────────────────────────
@@ -190,60 +204,69 @@ export const messagingService = {
       }
     });
 
-    const sendPromises = recipients.map(r => {
-      if (!r.email) return Promise.resolve();
+    const failed: string[] = [];
+
+    for (const r of recipients) {
+      if (!r.email) continue;
       const personalizedText = text.replace('{name}', r.name || 'Customer');
       const personalizedSubject = subject.replace('{name}', r.name || 'Customer');
-      return transporter.sendMail({
-        from: process.env.EMAIL_FROM || '"yoInfo Bulk" <no-reply@yoinfo.com>',
-        to: r.email,
-        subject: personalizedSubject,
-        text: personalizedText,
-        html: buildEmailHtml(personalizedText, personalizedSubject),
-      }).catch(err => {
-        console.error(`Failed to send email to ${r.email}:`, err);
-      });
-    });
+      try {
+        await transporter.sendMail({
+          from: process.env.EMAIL_FROM || '"yoInfo Bulk" <no-reply@yoinfo.com>',
+          to: r.email,
+          subject: personalizedSubject,
+          text: personalizedText,
+          html: buildEmailHtml(personalizedText, personalizedSubject),
+        });
+      } catch (err: any) {
+        console.error(`[EMAIL] Failed to send to ${r.email}:`, err.message || err);
+        failed.push(`${r.email} (${err.message || 'unknown'})`);
+      }
+    }
 
-    await Promise.all(sendPromises);
-    return true;
+    return { success: failed.length === 0, totalSent: recipients.length - failed.length, failed };
   },
 
   sendSmsBatch: async (recipients: { phone: string; name?: string }[], text: string) => {
-    // Personalize each recipient's message and collect phones
     const personalized = recipients
       .filter(r => r.phone && r.phone.trim())
       .map(r => ({
         phone: r.phone,
+        name: r.name || 'Customer',
         message: text.replace('{name}', r.name || 'Customer'),
       }));
 
     if (personalized.length === 0) {
       console.log('[SMS] No valid phone numbers to send to');
-      return true;
+      return { success: true, totalSent: 0, failed: [], parts: 1 };
     }
 
-    // Collect all phone numbers
-    const phones = personalized.map(p => p.phone);
-
-    // Use the first personalized message (bulk mode — same message to all)
-    // If personalized messages differ per contact, fall back to individual sending
     const firstMessage = personalized[0].message;
     const allSame = personalized.every(p => p.message === firstMessage);
 
     if (allSame) {
-      // Batch send — all recipients get the same message
+      const phones = personalized.map(p => p.phone);
       const result = await sendBatchSms(phones, firstMessage);
-      console.log(`[SMS] Batch result: ${result.totalSent} sent, ${result.failed.length} failed`);
-      return result.success;
+      const parts = getSmsParts(firstMessage);
+      console.log(`[SMS] Batch result: ${result.totalSent} sent, ${result.failed.length} failed, ${parts} part(s)`);
+      return { ...result, parts };
     } else {
-      // Individual send — each recipient gets a personalized message
-      let allSuccess = true;
+      let totalSent = 0;
+      const failed: string[] = [];
+      let lastParts = 1;
+
       for (const p of personalized) {
         const result = await sendSmsViaAfro(p.phone, p.message);
-        if (!result.success) allSuccess = false;
+        lastParts = result.parts || 1;
+        if (result.success) {
+          totalSent++;
+        } else {
+          failed.push(`${p.phone} (${result.response || 'unknown'})`);
+        }
+        await new Promise(resolve => setTimeout(resolve, INDIVIDUAL_SEND_DELAY_MS));
       }
-      return allSuccess;
+
+      return { success: failed.length === 0, totalSent, failed, parts: lastParts };
     }
   },
 

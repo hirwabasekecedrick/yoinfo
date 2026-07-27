@@ -80,7 +80,7 @@ function BusinessPageContent() {
 
   return (
     <ProtectedRoute>
-      <ToolLayout title="Business Directory" subtitle="Discover businesses across Africa." navItems={TOOL_NAV}>
+      <ToolLayout title="" subtitle="" navItems={TOOL_NAV}>
         <div className="flex gap-6">
           {/* Filters Sidebar */}
           <div className="w-64 flex-shrink-0 hidden lg:block">

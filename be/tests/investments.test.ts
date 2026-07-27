@@ -1,15 +1,27 @@
 import request from 'supertest';
 import app from '../src/app';
+import { registerAndLogin } from './helpers';
 
 describe('Investments Endpoints', () => {
   let authToken: string;
   let investmentId: string;
 
   beforeAll(async () => {
-    const loginRes = await request(app)
-      .post('/auth/login')
-      .send({ email: 'alice@example.com', password: 'password123' });
-    authToken = loginRes.body.token;
+    const { token } = await registerAndLogin();
+    authToken = token;
+
+    await request(app)
+      .post('/api/investments')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({
+        title: 'Tech Seed Investment',
+        category: 'Technology',
+        summary: 'A technology investment seed record',
+        minInvestment: 5000,
+        maxInvestment: 500000,
+        location: 'Kigali, Rwanda',
+        roi: '12% annually',
+      });
   });
 
   describe('GET /api/investments', () => {
@@ -35,6 +47,7 @@ describe('Investments Endpoints', () => {
 
       expect(res.status).toBe(200);
       expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body.length).toBeGreaterThan(0);
       res.body.forEach((inv: any) => {
         expect(inv.category).toBe('Technology');
       });
@@ -44,6 +57,7 @@ describe('Investments Endpoints', () => {
       const res = await request(app).get('/api/investments?status=Open');
 
       expect(res.status).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
       res.body.forEach((inv: any) => {
         expect(inv.status).toBe('Open');
       });

@@ -1,7 +1,21 @@
 import request from 'supertest';
 import app from '../src/app';
+import { prisma } from '../src/config/db';
 
 describe('Tags Endpoints', () => {
+  beforeAll(async () => {
+    await prisma.tag.upsert({
+      where: { name: 'test_seed_tag' },
+      update: {},
+      create: { name: 'test_seed_tag', label: 'Test Seed Tag' },
+    });
+    await prisma.tag.upsert({
+      where: { name: 'alpha_tag' },
+      update: {},
+      create: { name: 'alpha_tag', label: 'Alpha Tag' },
+    });
+  });
+
   describe('GET /api/tags', () => {
     it('should return all tags', async () => {
       const res = await request(app).get('/api/tags');

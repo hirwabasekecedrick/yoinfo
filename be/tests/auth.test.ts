@@ -60,18 +60,31 @@ describe('Auth Endpoints', () => {
   });
 
   describe('POST /auth/login', () => {
+    const loginEmail = `login-test-${Date.now()}@example.com`;
+
+    beforeAll(async () => {
+      await request(app)
+        .post('/auth/register')
+        .send({
+          email: loginEmail,
+          password: 'password123',
+          confirmPassword: 'password123',
+          name: 'Login Test User',
+        });
+    });
+
     it('should login with valid credentials', async () => {
       const res = await request(app)
         .post('/auth/login')
         .send({
-          email: 'alice@example.com',
+          email: loginEmail,
           password: 'password123',
         });
 
       expect(res.status).toBe(200);
       expect(res.body.token).toBeDefined();
       expect(res.body.user).toBeDefined();
-      expect(res.body.user.email).toBe('alice@example.com');
+      expect(res.body.user.email).toBe(loginEmail);
       expect(res.body.user.password).toBeUndefined();
     });
 
@@ -79,7 +92,7 @@ describe('Auth Endpoints', () => {
       const res = await request(app)
         .post('/auth/login')
         .send({
-          email: 'alice@example.com',
+          email: loginEmail,
           password: 'wrongpassword',
         });
 
@@ -101,20 +114,34 @@ describe('Auth Endpoints', () => {
   });
 
   describe('GET /auth/me', () => {
-    it('should return user with valid token', async () => {
+    const meEmail = `me-test-${Date.now()}@example.com`;
+    let token: string;
+
+    beforeAll(async () => {
+      await request(app)
+        .post('/auth/register')
+        .send({
+          email: meEmail,
+          password: 'password123',
+          confirmPassword: 'password123',
+          name: 'Me Test User',
+        });
+
       const loginRes = await request(app)
         .post('/auth/login')
-        .send({ email: 'alice@example.com', password: 'password123' });
+        .send({ email: meEmail, password: 'password123' });
 
-      const token = loginRes.body.token;
+      token = loginRes.body.token;
+    });
 
+    it('should return user with valid token', async () => {
       const res = await request(app)
         .get('/auth/me')
         .set('Authorization', `Bearer ${token}`);
 
       expect(res.status).toBe(200);
       expect(res.body.user).toBeDefined();
-      expect(res.body.user.email).toBe('alice@example.com');
+      expect(res.body.user.email).toBe(meEmail);
     });
 
     it('should reject without token', async () => {

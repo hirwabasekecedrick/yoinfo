@@ -51,8 +51,8 @@ export default function InvestmentsContent() {
   return (
     <ProtectedRoute>
       <ToolLayout
-        title="Investment Profiler"
-        subtitle="Discover high-potential opportunities across Africa."
+        title=""
+        subtitle=""
         navItems={TOOL_NAV}
       >
         <div className="flex gap-6">
