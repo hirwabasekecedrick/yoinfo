@@ -13,6 +13,11 @@ const RETRY_ATTEMPTS = 3;
 const RETRY_DELAY_MS = 2000;
 const INDIVIDUAL_SEND_DELAY_MS = 300;
 
+// ─── Strip protocol from URLs (carriers block https:// in SMS) ──
+function sanitizeUrlsForSms(text: string): string {
+  return text.replace(/https?:\/\/(www\.)?/gi, '');
+}
+
 // ─── Phone Number Normalization ─────────────────────────────────
 function normalizePhone(phone: string): string {
   let cleaned = phone.replace(/[\s\-()]/g, '');
@@ -57,7 +62,8 @@ async function sendSmsViaAfro(phone: string, message: string): Promise<{ success
   }
 
   const normalizedPhone = normalizePhone(phone);
-  const parts = getSmsParts(message);
+  const sanitizedMessage = sanitizeUrlsForSms(message);
+  const parts = getSmsParts(sanitizedMessage);
 
   try {
     const response = await withRetry(() => {
@@ -68,7 +74,7 @@ async function sendSmsViaAfro(phone: string, message: string): Promise<{ success
           from_number: AFRO_FROM_NUMBER.startsWith('+') ? AFRO_FROM_NUMBER : `+${AFRO_FROM_NUMBER}`,
           sender_id: AFRO_SENDER_ID,
           to_numbers: normalizedPhone,
-          body: message,
+          body: sanitizedMessage,
           isSchedule: '',
           schedule: '',
         },
@@ -108,6 +114,7 @@ async function sendBatchSms(phones: string[], message: string): Promise<{ succes
     return { success: true, totalSent: 0, failed: [] };
   }
 
+  const sanitizedMessage = sanitizeUrlsForSms(message);
   console.log(`[SMS] Batch sending to ${normalizedPhones.length} recipients`);
 
   try {
@@ -119,7 +126,7 @@ async function sendBatchSms(phones: string[], message: string): Promise<{ succes
           from_number: AFRO_FROM_NUMBER.startsWith('+') ? AFRO_FROM_NUMBER : `+${AFRO_FROM_NUMBER}`,
           sender_id: AFRO_SENDER_ID,
           to_numbers: normalizedPhones.join(','),
-          body: message,
+          body: sanitizedMessage,
           isSchedule: '',
           schedule: '',
         },
@@ -147,10 +154,11 @@ async function sendBatchSms(phones: string[], message: string): Promise<{ succes
 async function sendIndividualSms(phones: string[], message: string): Promise<{ success: boolean; totalSent: number; failed: string[] }> {
   const failed: string[] = [];
   let totalSent = 0;
+  const sanitizedMessage = sanitizeUrlsForSms(message);
 
   for (const phone of phones) {
     if (!phone || !phone.trim()) continue;
-    const result = await sendSmsViaAfro(phone, message);
+    const result = await sendSmsViaAfro(phone, sanitizedMessage);
     if (result.success) {
       totalSent++;
     } else {
@@ -228,12 +236,13 @@ export const messagingService = {
   },
 
   sendSmsBatch: async (recipients: { phone: string; name?: string }[], text: string) => {
+    const sanitizedText = sanitizeUrlsForSms(text);
     const personalized = recipients
       .filter(r => r.phone && r.phone.trim())
       .map(r => ({
         phone: r.phone,
         name: r.name || 'Customer',
-        message: text.replace('{name}', r.name || 'Customer'),
+        message: sanitizedText.replace('{name}', r.name || 'Customer'),
       }));
 
     if (personalized.length === 0) {
@@ -249,6 +258,9 @@ export const messagingService = {
       const result = await sendBatchSms(phones, firstMessage);
       const parts = getSmsParts(firstMessage);
       console.log(`[SMS] Batch result: ${result.totalSent} sent, ${result.failed.length} failed, ${parts} part(s)`);
+      if (result.failed.length > 0) {
+        console.log(`[SMS] Failed numbers: ${result.failed.join(', ')}`);
+      }
       return { ...result, parts };
     } else {
       let totalSent = 0;
@@ -266,6 +278,10 @@ export const messagingService = {
         await new Promise(resolve => setTimeout(resolve, INDIVIDUAL_SEND_DELAY_MS));
       }
 
+      console.log(`[SMS] Individual result: ${totalSent} sent, ${failed.length} failed`);
+      if (failed.length > 0) {
+        console.log(`[SMS] Failed numbers: ${failed.join(', ')}`);
+      }
       return { success: failed.length === 0, totalSent, failed, parts: lastParts };
     }
   },

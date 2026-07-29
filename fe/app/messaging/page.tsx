@@ -27,6 +27,8 @@ export default function MessagingDashboard() {
   const [addPhone, setAddPhone] = useState('');
   const [addEmail, setAddEmail] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const vcardInputRef = useRef<HTMLInputElement>(null);
+  const [hasContactPicker, setHasContactPicker] = useState(false);
 
   // Messages (channel-aware)
   const [emailSubject, setEmailSubject] = useState('');
@@ -140,6 +142,78 @@ export default function MessagingDashboard() {
         .catch(() => {});
     }
   }, []);
+
+  // Detect Contact Picker API support (Android Chrome)
+  useEffect(() => {
+    setHasContactPicker('contacts' in navigator && 'ContactsManager' in window);
+  }, []);
+
+  // Use native Contact Picker API (Android Chrome)
+  const handleNativeContactPicker = async () => {
+    try {
+      const supported = await (navigator as any).contacts.getProperties();
+      if (!supported.includes('name') && !supported.includes('tel') && !supported.includes('email')) {
+        showToast('Your device does not support contact selection', 'error');
+        return;
+      }
+      const picked = await (navigator as any).contacts.select(
+        ['name', 'tel', 'email'],
+        { multiple: true }
+      );
+      if (!picked || picked.length === 0) return;
+      const newContacts = picked
+        .map((c: any) => ({
+          name: c.name?.[0] || '',
+          phone: c.tel?.[0] || '',
+          email: c.email?.[0] || '',
+        }))
+        .filter((c: any) => c.phone || c.email);
+      if (newContacts.length === 0) {
+        showToast('Selected contacts had no phone or email', 'error');
+        return;
+      }
+      setContacts(prev => [...prev, ...newContacts]);
+      showToast(`${newContacts.length} contact(s) imported`, 'success');
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') {
+        showToast('Failed to pick contacts', 'error');
+      }
+    }
+  };
+
+  // Parse vCard (.vcf) file for iOS/Safari fallback
+  const handleVCardUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const text = evt.target?.result as string;
+        const cards = text.split('BEGIN:VCARD').filter(c => c.trim());
+        const parsed = cards.map(card => {
+          const get = (field: string) => {
+            const match = card.match(new RegExp(`${field}[;:][^\\r\\n]*`, 'i'));
+            return match ? match[0].split(':').slice(1).join(':').trim() : '';
+          };
+          return {
+            name: get('FN') || get('N')?.replace(/;/g, ' ').replace(/\s+/g, ' ').trim() || '',
+            phone: get('TEL') || get('TEL;CELL') || get('TEL;WORK') || get('TEL;HOME') || '',
+            email: get('EMAIL') || '',
+          };
+        }).filter(c => c.phone || c.email);
+        if (parsed.length === 0) {
+          showToast('No contacts with phone/email found in file', 'error');
+          return;
+        }
+        setContacts(prev => [...prev, ...parsed]);
+        showToast(`${parsed.length} contact(s) imported from vCard`, 'success');
+      } catch {
+        showToast('Could not parse vCard file', 'error');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -541,9 +615,24 @@ export default function MessagingDashboard() {
 
                     <div className="text-center text-xs text-gray-400 font-bold">OR</div>
 
-                    <div className="dropzone" onClick={() => fileInputRef.current?.click()}>
-                      <div className="font-semibold text-sm text-gray-600">Click to browse Excel/CSV</div>
-                      <input type="file" ref={fileInputRef} hidden accept=".xlsx,.xls,.csv" onChange={handleFileUpload} />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="dropzone" onClick={() => fileInputRef.current?.click()}>
+                        <div className="font-semibold text-sm text-gray-600">Upload Excel/CSV</div>
+                        <input type="file" ref={fileInputRef} hidden accept=".xlsx,.xls,.csv" onChange={handleFileUpload} />
+                      </div>
+
+                      {hasContactPicker ? (
+                        <div className="dropzone" onClick={handleNativeContactPicker} style={{ borderColor: '#C1027D' }}>
+                          <div className="font-semibold text-sm" style={{ color: '#C1027D' }}>Pick from Phone Contacts</div>
+                          <p className="text-[11px] text-gray-400 mt-0.5">Select contacts from your device</p>
+                        </div>
+                      ) : (
+                        <div className="dropzone" onClick={() => vcardInputRef.current?.click()}>
+                          <div className="font-semibold text-sm text-gray-600">Import vCard (.vcf)</div>
+                          <p className="text-[11px] text-gray-400 mt-0.5">Export contacts as .vcf first</p>
+                          <input type="file" ref={vcardInputRef} hidden accept=".vcf" onChange={handleVCardUpload} />
+                        </div>
+                      )}
                     </div>
 
                     {contacts.length > 0 && (

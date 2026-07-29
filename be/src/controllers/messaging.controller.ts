@@ -98,6 +98,9 @@ export const sendBulkMessage = async (req: AuthRequest, res: Response): Promise<
         email: emailResult,
         sms: smsResult ? { totalSent: smsResult.totalSent, failed: smsResult.failed, parts: smsResult.parts } : null,
       },
+      message: campaignStatus === 'SENT' ? 'Campaign sent successfully' :
+               campaignStatus === 'PARTIAL' ? 'Campaign partially sent (some recipients failed)' :
+               'Campaign failed to send',
     });
   } catch (error) {
     console.error('Failed to send bulk message:', error);
@@ -238,6 +241,9 @@ export const resendCampaign = async (req: AuthRequest, res: Response): Promise<v
         email: emailResult,
         sms: smsResult ? { totalSent: smsResult.totalSent, failed: smsResult.failed, parts: smsResult.parts } : null,
       },
+      message: campaignStatus === 'SENT' ? 'Campaign resent successfully' :
+               campaignStatus === 'PARTIAL' ? 'Campaign partially resent (some recipients failed)' :
+               'Campaign failed to resend',
     });
   } catch (error) {
     console.error('Failed to resend campaign:', error);
