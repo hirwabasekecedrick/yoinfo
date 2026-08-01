@@ -16,6 +16,12 @@ export default function Home() {
             <Link href="/" className="text-sm font-medium text-gray-500 hover:text-[#C1027D] px-2 sm:px-3 py-2 rounded-lg hover:bg-[#FBEAF5] transition-colors hidden sm:block">
               Home
             </Link>
+            <Link href="/flipper" className="text-sm font-semibold text-[#C1027D] px-2 sm:px-3 py-2 rounded-lg bg-[#FBEAF5] transition-colors hidden sm:block">
+              Fliiper
+            </Link>
+            <Link href="/invoices" className="text-sm font-medium text-gray-500 hover:text-[#C1027D] px-2 sm:px-3 py-2 rounded-lg hover:bg-[#FBEAF5] transition-colors hidden sm:block">
+              Invoices
+            </Link>
             <Link href="/business" className="text-sm font-medium text-gray-500 hover:text-[#C1027D] px-2 sm:px-3 py-2 rounded-lg hover:bg-[#FBEAF5] transition-colors hidden sm:block">
               Business
             </Link>
@@ -129,6 +135,15 @@ export default function Home() {
 
         {/* ── Option Cards ──────────────────────────────── */}
         <section className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 text-xs font-bold text-[#8A0260] bg-[#FBEAF5] px-3 py-1.5 rounded-full mb-4 uppercase tracking-wider">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FF6FB5]" />
+              For businesses
+            </div>
+            <p className="text-xl sm:text-2xl font-extrabold text-gray-900 max-w-2xl mx-auto">
+              Whether you&apos;re growing capital, growing an audience, or growing a customer list — these are the tools that get your business in front of yoInfo&apos;s readers.
+            </p>
+          </div>
           <div className="grid md:grid-cols-2 gap-8">
             {/* Blast Wizard */}
             <Link
@@ -173,6 +188,50 @@ export default function Home() {
                 </svg>
               </span>
             </Link>
+
+            {/* Fliiper */}
+            <Link
+              href="/flipper"
+              className="group relative bg-white rounded-2xl border border-[#f0e4ec] p-8 transition-all duration-300 hover:shadow-xl hover:border-[#F8CEE9] hover:-translate-y-1"
+            >
+              <div className="ring lime mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15a2.25 2.25 0 012.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">yoInfo Fliiper</h3>
+              <p className="text-gray-500 text-sm leading-relaxed mb-6">
+                Flip through curated news, deals, tenders, and jobs in seconds. No noise, just what matters.
+              </p>
+              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#C1027D] group-hover:gap-3 transition-all duration-300">
+                Browse Feed
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </span>
+            </Link>
+
+            {/* Invoice Wizard */}
+            <Link
+              href="/invoices"
+              className="group relative bg-white rounded-2xl border border-[#f0e4ec] p-8 transition-all duration-300 hover:shadow-xl hover:border-[#F8CEE9] hover:-translate-y-1"
+            >
+              <div className="ring soft mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6M9 11h6M9 15h3M6 3h9l3 3v15a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Invoice Wizard</h3>
+              <p className="text-gray-500 text-sm leading-relaxed mb-6">
+                Create RRA/EBM-compliant invoices and receipts, and send them by WhatsApp, Email, or SMS link.
+              </p>
+              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#C1027D] group-hover:gap-3 transition-all duration-300">
+                Create Invoice
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </span>
+            </Link>
           </div>
         </section>
 
@@ -212,6 +271,8 @@ export default function Home() {
               <img src="/YoINFOlogo.png" alt="yoInfo" className="h-6" />
             </div>
             <div className="flex items-center gap-6 text-sm text-gray-500">
+              <Link href="/flipper" className="hover:text-[#C1027D] transition-colors">Fliiper</Link>
+              <Link href="/invoices" className="hover:text-[#C1027D] transition-colors">Invoices</Link>
               <Link href="/messaging" className="hover:text-[#C1027D] transition-colors">Blast</Link>
               <Link href="/poster/dashboard" className="hover:text-[#C1027D] transition-colors">Post</Link>
               <Link href="/business" className="hover:text-[#C1027D] transition-colors">Business</Link>
