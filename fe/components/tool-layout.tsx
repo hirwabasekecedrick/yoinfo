@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import IbiceriBadge from '@/components/ibiceri-badge';
 
 interface ToolLayoutProps {
   children: React.ReactNode;
@@ -152,8 +153,9 @@ export default function ToolLayout({ children, title, subtitle, navItems }: Tool
             {subtitle && <p className="text-[11px] text-gray-400 truncate">{subtitle}</p>}
           </div>
 
-          {/* Right — user dropdown */}
-          <div className="relative flex items-center" ref={dropdownRef}>
+          {/* Right — Ibiceri + user dropdown */}
+          <div className="relative flex items-center gap-2" ref={dropdownRef}>
+            <IbiceriBadge />
             <button
               className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 transition-colors hover:bg-gray-100"
               onClick={() => setDropdownOpen(!dropdownOpen)}

@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import ToolLayout from '@/components/tool-layout';
 import ProtectedRoute from '@/components/protected-route';
+import { useIbiceri } from '@/components/ibiceri-provider';
 
 const TOOL_NAV = [
   { label: 'Update Wizard', href: '/poster/dashboard', icon: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z' },
@@ -25,6 +26,7 @@ const SEED_INVOICES: Invoice[] = [
 ];
 
 export default function InvoicesPage() {
+  const { balance, spend } = useIbiceri();
   const [view, setView] = useState<View>('dashboard');
   const [invoices, setInvoices] = useState<Invoice[]>(SEED_INVOICES);
   const [nextNumber, setNextNumber] = useState(5);
@@ -83,6 +85,7 @@ export default function InvoicesPage() {
 
   const issueInvoice = () => {
     if (!clientName.trim()) { showToast('Add a client name before issuing'); return; }
+    if (!spend(2, 'Invoice issue')) return;
     const num = 'INV-2026-' + String(nextNumber).padStart(4, '0');
     setIssuedNum(num);
     setIssuedDate(new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }));
@@ -91,7 +94,7 @@ export default function InvoicesPage() {
     setNextNumber(n => n + 1);
     const { total } = calcTotals();
     setInvoices(prev => [{ num, client: clientName, amount: total, status: 'Sent', ebm: 'Synced', due: '—' }, ...prev]);
-    showToast('Invoice ' + num + ' issued and registered with RRA EBM');
+    showToast('Invoice ' + num + ' issued and registered with RRA EBM · 2 Ibiceri spent');
   };
 
   const sendInvoice = (channel: string) => {
@@ -283,7 +286,10 @@ export default function InvoicesPage() {
                   <div className="iw-ebm-label">EBM status</div>
                   <div className="iw-ebm-status">{ebmStatus}</div>
                 </div>
-                <button className="btn btn-primary btn-full mt-4" onClick={issueInvoice}>Issue Invoice (RRA EBM)</button>
+                <button className="btn btn-primary btn-full mt-4" onClick={issueInvoice}>Issue Invoice (RRA EBM) — 2 Ibiceri</button>
+                <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--muted, #7A6270)', fontWeight: 600, marginTop: 8 }}>
+                  Your balance: <span id="invcBalanceHint">{balance.toLocaleString()}</span> Ibiceri
+                </div>
                 <button className="btn btn-outline btn-full mt-2" onClick={openPreview}>🖨 Preview &amp; Print / Save as PDF</button>
                 <h4 className="font-bold text-sm mt-6 mb-2">Send to client</h4>
                 <div className="iw-send-row">
