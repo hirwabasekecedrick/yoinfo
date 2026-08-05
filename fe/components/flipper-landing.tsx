@@ -7,10 +7,10 @@ import IbiceriBadge from '@/components/ibiceri-badge';
 const FILTERS = ['All', 'News', 'Deals', 'Jobs', 'Tenders'];
 const FLIIPER_TAGS = ['News', 'Deals', 'Jobs', 'Tenders', 'Tourism', 'Hospitality', 'Business', 'Agriculture', 'Technology', 'Real Estate', 'Northern Province', 'Diaspora'];
 
-const FLIP_CARDS = [
+const TOOL_CARDS = [
   {
     id: 'A',
-    badge: 'YOEXPOGUIDE',
+    badge: 'YOINFO FLIIPER',
     badgeAlt: false,
     mediaClass: 'flip-card-media-a',
     title: "Tired of losing contacts at the show?",
@@ -21,6 +21,179 @@ const FLIP_CARDS = [
       { label: 'Exhibitors', action: 'Log in →' },
     ],
     hashtags: '#Expo2026  #RITF  #SmartNetworking',
+    context: {
+      eyebrow: 'Meet yoInfo Fliiper',
+      desc: <><strong>yoInfo <em>Fliiper</em> lets busy professionals flip through curated news, deals, tenders, and jobs in seconds</strong> — no noise, just what matters, in five languages.</>,
+      primary: { label: 'Browse Feed', href: '/flipper' },
+      secondary: { label: 'Create Free Account', href: '/auth?tab=signup' },
+      stats: [
+        { n: '2,400+', l: 'Active Investors' },
+        { n: '850+', l: 'Businesses Listed' },
+        { n: '12K+', l: 'Posts Published' },
+        { n: '40K+', l: 'Messages Sent' },
+      ],
+    },
+  },
+  {
+    id: 'B',
+    badge: 'UPDATE WIZARD',
+    badgeAlt: true,
+    mediaClass: 'flip-card-media-b',
+    title: 'Share updates in seconds',
+    meta: 'yoInfo · Publish instantly',
+    text: 'Post news, events, and announcements with images, links, and a call-to-action.',
+    bold: 'One post. Everywhere.',
+    ctas: [
+      { label: 'Post', action: 'Create →' },
+      { label: 'Track', action: 'Live →' },
+    ],
+    hashtags: '#Post  #Update  #Blast',
+    context: {
+      eyebrow: 'Meet yoInfo Update Wizard',
+      desc: <><strong>Update Wizard lets you share news, events, and announcements with your audience</strong> — add images, links, and a call-to-action from one place.</>,
+      primary: { label: 'Create a Post', href: '/poster/dashboard' },
+      secondary: { label: 'Create Free Account', href: '/auth?tab=signup' },
+      stats: [
+        { n: '12K+', l: 'Posts Published' },
+        { n: '850+', l: 'Businesses Posting' },
+        { n: '5K+', l: 'Events Shared' },
+        { n: '24/7', l: 'Instant Publishing' },
+      ],
+    },
+  },
+  {
+    id: 'C',
+    badge: 'BLAST WIZARD',
+    badgeAlt: false,
+    mediaClass: 'flip-card-media-a',
+    title: 'Blast to WhatsApp, SMS & email',
+    meta: 'yoInfo · One send, every inbox',
+    text: 'Upload contacts, write once, and send everywhere at the same time.',
+    bold: 'Write once. Blast everywhere.',
+    ctas: [
+      { label: 'WhatsApp', action: 'Send →' },
+      { label: 'Email', action: 'Send →' },
+    ],
+    hashtags: '#BlastWizard  #Messaging',
+    context: {
+      eyebrow: 'Meet yoInfo Blast Wizard',
+      desc: <><strong>Blast Wizard sends your message to WhatsApp, SMS, and email from one place</strong> — upload contacts, write once, and blast to everyone at once.</>,
+      primary: { label: 'Send a Blast', href: '/messaging' },
+      secondary: { label: 'Create Free Account', href: '/auth?tab=signup' },
+      stats: [
+        { n: '40K+', l: 'Messages Sent' },
+        { n: '25K+', l: 'WhatsApp Delivered' },
+        { n: '10K+', l: 'Emails Sent' },
+        { n: '5K+', l: 'SMS Sent' },
+      ],
+    },
+  },
+  {
+    id: 'D',
+    badge: 'INVOICE WIZARD',
+    badgeAlt: true,
+    mediaClass: 'flip-card-media-b',
+    title: 'RRA/EBM-compliant invoices',
+    meta: 'yoInfo · Numbered automatically',
+    text: 'Create compliant invoices and receipts, and submit to EBM automatically.',
+    bold: 'Compliant by default.',
+    ctas: [
+      { label: 'Invoice', action: 'Create →' },
+      { label: 'Receipt', action: 'Print →' },
+    ],
+    hashtags: '#Invoicing  #RRAEBM',
+    context: {
+      eyebrow: 'Meet yoInfo Invoice Wizard',
+      desc: <><strong>Invoice Wizard creates RRA/EBM-compliant invoices and receipts, numbered automatically</strong> — and sends them by WhatsApp, Email, or SMS link.</>,
+      primary: { label: 'Create an Invoice', href: '/invoices' },
+      secondary: { label: 'Create Free Account', href: '/auth?tab=signup' },
+      stats: [
+        { n: '8K+', l: 'Invoices Created' },
+        { n: '100%', l: 'RRA & EBM Ready' },
+        { n: '850+', l: 'Businesses Invoicing' },
+        { n: '15K+', l: 'Invoices Sent' },
+      ],
+    },
+  },
+  {
+    id: 'E',
+    badge: 'BUSINESS PROFILING',
+    badgeAlt: false,
+    mediaClass: 'flip-card-media-a',
+    title: 'Your business, one clean page',
+    text: 'A professional profile with your logo, services, and contact details.',
+    bold: 'Look professional everywhere.',
+    ctas: [
+      { label: 'Business', action: 'Build →' },
+    ],
+    hashtags: '#BusinessProfile  #Growth',
+    context: {
+      eyebrow: 'Meet yoInfo Business Profiling',
+      desc: <><strong>Business Profiling gives your business a professional profile</strong> — logo, services, and contact details, all in one place.</>,
+      primary: { label: 'Build Your Profile', href: '/business' },
+      secondary: { label: 'Create Free Account', href: '/auth?tab=signup' },
+      stats: [
+        { n: '850+', l: 'Businesses Listed' },
+        { n: '1,200+', l: 'Profiles Created' },
+        { n: '96%', l: 'Found On Search' },
+        { n: '5', l: 'Languages Available' },
+      ],
+    },
+  },
+  {
+    id: 'F',
+    badge: 'INVESTMENTS',
+    badgeAlt: true,
+    mediaClass: 'flip-card-media-b',
+    title: 'Browse vetted opportunities',
+    meta: 'yoInfo · Real estate, energy & more',
+    text: 'Real estate, agriculture, energy, and technology deals worth reviewing.',
+    bold: 'Find your next move.',
+    ctas: [
+      { label: 'Deals', action: 'Browse →' },
+    ],
+    hashtags: '#Investments  #Opportunities',
+    context: {
+      eyebrow: 'Meet yoInfo Investments',
+      desc: <><strong>yoInfo Investments brings you vetted opportunities</strong> across real estate, agriculture, energy, and more.</>,
+      primary: { label: 'Browse Investments', href: '/investments' },
+      secondary: { label: 'Create Free Account', href: '/auth?tab=signup' },
+      stats: [
+        { n: '50+', l: 'Opportunities Live' },
+        { n: '2,400+', l: 'Active Investors' },
+        { n: 'RWF 75M+', l: 'Capital Raised' },
+        { n: '6', l: 'Sectors Covered' },
+      ],
+    },
+  },
+];
+
+const FLIPPER_CARDS = [
+  {
+    id: 'A',
+    badge: 'YOINFO FLIIPER',
+    badgeAlt: false,
+    mediaClass: 'flip-card-media-a',
+    title: "Tired of losing contacts at the show?",
+    text: "Get a digital business card and visitor registration, and turn every handshake into a real lead.",
+    bold: "Manage smarter. Follow up faster.",
+    ctas: [
+      { label: 'Visitors', action: 'Get yours →' },
+      { label: 'Exhibitors', action: 'Log in →' },
+    ],
+    hashtags: '#Expo2026  #RITF  #SmartNetworking',
+    context: {
+      eyebrow: 'Meet yoInfo Fliiper',
+      desc: <><strong>yoInfo <em>Fliiper</em> lets busy professionals flip through curated news, deals, tenders, and jobs in seconds</strong> — no noise, just what matters, in five languages.</>,
+      primary: { label: 'Browse Feed', href: '/flipper' },
+      secondary: { label: 'Create Free Account', href: '/auth?tab=signup' },
+      stats: [
+        { n: '2,400+', l: 'Active Investors' },
+        { n: '850+', l: 'Businesses Listed' },
+        { n: '12K+', l: 'Posts Published' },
+        { n: '40K+', l: 'Messages Sent' },
+      ],
+    },
   },
   {
     id: 'B',
@@ -33,6 +206,19 @@ const FLIP_CARDS = [
     ctas: [
       { label: 'Package', action: 'View Package →' },
     ],
+    hashtags: '#RITF2026  #ExpoGuide',
+    context: {
+      eyebrow: 'Meet yoInfo Fliiper',
+      desc: <><strong>yoInfo <em>Fliiper</em> lets busy professionals flip through curated news, deals, tenders, and jobs in seconds</strong> — no noise, just what matters, in five languages.</>,
+      primary: { label: 'Browse Feed', href: '/flipper' },
+      secondary: { label: 'Create Free Account', href: '/auth?tab=signup' },
+      stats: [
+        { n: '2,400+', l: 'Active Investors' },
+        { n: '850+', l: 'Businesses Listed' },
+        { n: '12K+', l: 'Posts Published' },
+        { n: '40K+', l: 'Messages Sent' },
+      ],
+    },
   },
 ];
 
@@ -50,6 +236,7 @@ const embedCode = `<div id="yoinfo-fliiper"\n     data-theme="light"\n     data-
 const apiCode = `curl https://api.yoinfo.africa/v1/feed?category=deals \\\n  -H "Authorization: Bearer YOUR_API_KEY"`;
 
 export default function FlipperLanding({ variant = 'landing' }: { variant?: 'landing' | 'feed' }) {
+  const cards = variant === 'feed' ? FLIPPER_CARDS : TOOL_CARDS;
   const [activeFilter, setActiveFilter] = useState('Deals');
   const [currentCard, setCurrentCard] = useState(0);
   const [flipperTags, setFlipperTags] = useState<string[]>(['Deals', 'Business']);
@@ -58,10 +245,10 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
   const [copied, setCopied] = useState<string | null>(null);
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentCard(prev => (prev + 1) % FLIP_CARDS.length);
+      setCurrentCard(prev => (prev + 1) % cards.length);
     }, 3200);
     return () => clearInterval(interval);
-  }, []);
+  }, [cards.length]);
 
   const feedItems = FEATURED_ITEMS.filter(item =>
     activeFilter === 'All' || item.category === activeFilter
@@ -106,32 +293,41 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
         {/* Hero Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-20">
+        <div className="hero-dots rounded-[2rem] grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-20 px-6 sm:px-10 py-12 sm:py-16">
           <div>
+            <img src="/YoINFOlogo.png" alt="yoInfo" className="h-8 mb-5" />
             <div className="inline-flex items-center gap-2 text-xs font-bold text-[#8A0260] bg-[#FBEAF5] px-3 py-1.5 rounded-full mb-4 uppercase tracking-wider">
               <span className="w-1.5 h-1.5 rounded-full bg-[#FF6FB5]" />
-              Meet yoInfo Fliiper
+              {cards[currentCard].context.eyebrow}
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 leading-[1.08] mb-4">
               Update. Publish. <span className="text-[#C1027D]">Blast.</span>
             </h1>
             <p className="text-base sm:text-lg text-gray-500 leading-relaxed max-w-lg mb-6">
-              <strong>yoInfo <em>Fliiper</em> lets busy professionals flip through curated news, deals, tenders, and jobs in seconds</strong> — no noise, just what matters, in five languages.
+              {cards[currentCard].context.desc}
             </p>
             <div className="flex gap-3 flex-wrap">
-              <Link href="/invoices" className="inline-flex items-center gap-2 bg-[#C1027D] text-white font-bold px-6 py-3 rounded-xl hover:bg-[#8A0260] transition-all shadow-lg shadow-[#C1027D]/25">
-                Try Invoice Wizard
+              <Link href={cards[currentCard].context.primary.href} className="inline-flex items-center gap-2 bg-[#C1027D] text-white font-bold px-6 py-3 rounded-xl hover:bg-[#8A0260] transition-all shadow-lg shadow-[#C1027D]/25">
+                {cards[currentCard].context.primary.label}
               </Link>
-              <Link href="/auth?tab=signup" className="inline-flex items-center gap-2 bg-white text-[#8A0260] font-bold px-6 py-3 rounded-xl border border-[#f0e4ec] hover:border-[#D93F9E] transition-colors">
-                Create Free Account
+              <Link href={cards[currentCard].context.secondary.href} className="inline-flex items-center gap-2 bg-white text-[#8A0260] font-bold px-6 py-3 rounded-xl border border-[#f0e4ec] hover:border-[#D93F9E] transition-colors">
+                {cards[currentCard].context.secondary.label}
               </Link>
+            </div>
+            <div className="stat-row mt-8">
+              {cards[currentCard].context.stats.map(s => (
+                <div key={s.l} className="stat-card">
+                  <div className="n">{s.n}</div>
+                  <div className="l">{s.l}</div>
+                </div>
+              ))}
             </div>
           </div>
 
           {/* Phone Mockup + Figure */}
           <div className="flex justify-center items-stretch gap-6">
             <div className="flip-hero-figure">
-              <img src="/man_standing_sending_message1.png" alt="yoInfo Fliiper user" className="flip-hero-figure-img" />
+              <img src="/man_standing_sending_message2.png" alt="yoInfo Fliiper user" className="flip-hero-figure-img" />
             </div>
             <div className="flip-phone-mockup">
               <div className="flip-phone-notch" />
@@ -145,7 +341,7 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
                     </div>
                   </div>
                   <div className="flip-topbar-right">
-                    <div className="flip-counter">{currentCard + 1} / {FLIP_CARDS.length}</div>
+                    <div className="flip-counter">{currentCard + 1} / {cards.length}</div>
                   </div>
                 </div>
                 <div className="flip-subtitle">Business information &amp; promotions</div>
@@ -159,13 +355,13 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
                 </div>
 
                 <div className="flip-dots">
-                  {FLIP_CARDS.map((_, i) => (
+                  {cards.map((_, i) => (
                     <span key={i} className={`flip-dot ${i === currentCard ? 'on' : ''}`} />
                   ))}
                 </div>
 
                 <div className="flip-card-stage">
-                  {FLIP_CARDS.map((card, i) => (
+                  {cards.map((card, i) => (
                     <div key={card.id} className={`flip-card ${i === currentCard ? 'show' : ''}`}>
                       <div className={`flip-card-media ${card.mediaClass}`}>
                         <div className={`flip-badge ${card.badgeAlt ? 'flip-badge-alt' : ''}`}>{card.badge}</div>
@@ -194,8 +390,92 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
           </div>
         </div>
 
-        {/* Featured Feed */}
+        {/* For businesses */}
         <section className="mb-20">
+          <div className="max-w-2xl mb-8">
+            <div className="text-xs font-bold text-[#8A0260] bg-[#FBEAF5] px-3 py-1 rounded-full inline-block mb-3 uppercase tracking-wider">For businesses</div>
+            <p className="text-lg sm:text-xl font-extrabold text-gray-900 leading-relaxed">Whether you&apos;re growing capital, growing an audience, or growing a customer list — these are the tools that get your business in front of yoInfo&apos;s readers.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Link href="/investments" className="group option-card">
+              <div className="flex gap-4">
+                <div className="w-20 sm:w-24 shrink-0 self-stretch rounded-xl overflow-hidden">
+                  <img src="/card1.png" alt="" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex flex-col gap-3.5 flex-1">
+                  <div className="option-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C1027D" strokeWidth="1.8"><path d="M3 17l6-6 4 4 8-9" strokeLinecap="round" strokeLinejoin="round"/><path d="M15 6h6v6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                  <div className="option-title">Investment Profiler</div>
+                  <div className="option-desc">Discover high-potential investments across real estate, tech, agriculture, and more.</div>
+                  <div className="option-meta"><span className="option-tag">50+ opportunities</span><span className="option-arrow">→</span></div>
+                </div>
+              </div>
+            </Link>
+
+            <Link href="/poster/dashboard" className="group option-card">
+              <div className="flex gap-4">
+                <div className="w-20 sm:w-24 shrink-0 self-stretch rounded-xl overflow-hidden">
+                  <img src="/card2.png" alt="" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex flex-col gap-3.5 flex-1">
+                  <div className="option-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C1027D" strokeWidth="1.8"><path d="M3 11l18-7-7 18-2.5-7.5L3 11z" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                  <div className="option-title">Update Wizard</div>
+                  <div className="option-desc">Share news, events, and announcements with a customizable call-to-action.</div>
+                  <div className="channel-row">
+                    <span className="channel-pill yi"><span className="dot"></span>yoInfo Fliiper</span>
+                    <span className="channel-pill ig"><span className="dot"></span>Instagram</span>
+                    <span className="channel-pill fb"><span className="dot"></span>Facebook</span>
+                    <span className="channel-pill tt"><span className="dot"></span>TikTok</span>
+                  </div>
+                  <div className="option-meta"><span className="option-tag">Share &amp; engage</span><span className="option-arrow">→</span></div>
+                </div>
+              </div>
+            </Link>
+
+            <Link href="/messaging" className="group option-card featured">
+              <div className="flex gap-4">
+                <div className="w-20 sm:w-24 shrink-0 self-stretch rounded-xl overflow-hidden">
+                  <img src="/card3.png" alt="" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex flex-col gap-3.5 flex-1">
+                  <div className="option-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3D0231" strokeWidth="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                  <div className="option-title">Blast Wizard</div>
+                  <div className="option-desc">Run Email, SMS and WhatsApp marketing campaigns to your contacts, all from one place.</div>
+                  <div className="channel-row">
+                    <span className="channel-pill wa"><span className="dot"></span>WhatsApp</span>
+                    <span className="channel-pill em"><span className="dot"></span>Email</span>
+                    <span className="channel-pill sm"><span className="dot"></span>SMS</span>
+                  </div>
+                  <div className="option-meta"><span className="option-tag">New</span><span className="option-arrow">→</span></div>
+                </div>
+              </div>
+            </Link>
+
+            <Link href="/invoices" className="group option-card">
+              <div className="flex gap-4">
+                <div className="w-20 sm:w-24 shrink-0 self-stretch rounded-xl overflow-hidden">
+                  <img src="/card4.png" alt="" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex flex-col gap-3.5 flex-1">
+                  <div className="option-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C1027D" strokeWidth="1.8"><path d="M9 7h6M9 11h6M9 15h3" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 3h9l3 3v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                  <div className="option-title">Invoice Wizard</div>
+                  <div className="option-desc">Create RRA/EBM-compliant invoices and receipts, and send them by WhatsApp, Email, or SMS link.</div>
+                  <div className="option-meta"><span className="option-tag">RRA &amp; EBM ready</span><span className="option-arrow">→</span></div>
+                </div>
+              </div>
+            </Link>
+          </div>
+        </section>
+
+        {/* Featured Feed */}
+        {/* <section className="mb-20">
           <div className="flex items-center justify-between mb-6">
             <div>
               <div className="text-xs font-bold text-[#8A0260] bg-[#FBEAF5] px-3 py-1 rounded-full inline-block mb-2 uppercase tracking-wider">Live Feed</div>
@@ -229,10 +509,10 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
               </div>
             ))}
           </div>
-        </section>
+        </section> */}
 
         {/* Interests */}
-        <section className="mb-20">
+        {/* <section className="mb-20">
           <div className="text-center mb-8">
             <div className="text-xs font-bold text-[#8A0260] bg-[#FBEAF5] px-3 py-1 rounded-full inline-block mb-2 uppercase tracking-wider">Personalize</div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">Choose your interests</h2>
@@ -275,10 +555,10 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
               ))}
             </div>
           )}
-        </section>
+        </section> */}
 
         {/* Developers */}
-        {variant === 'landing' && (
+        {/* {variant === 'landing' && (
           <section className="mb-20" id="developers">
             <div className="mb-6">
               <div className="text-xs font-bold text-[#8A0260] bg-[#FBEAF5] px-3 py-1 rounded-full inline-block mb-2 uppercase tracking-wider">Developers &amp; Partners</div>
@@ -325,19 +605,16 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
               </div>
             </div>
           </section>
-        )}
+        )} */}
 
         {/* CTA */}
         {variant === 'landing' && (
           <section className="bg-[#3D0231] rounded-2xl p-10 sm:p-14 text-center text-white mb-10">
-            <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">Ready to flip through what matters?</h2>
-            <p className="text-[#D98DBB] max-w-md mx-auto mb-6">Download yoInfo Fliiper and never miss an opportunity again.</p>
+            <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">Ready to get started ?</h2>
+            <p className="text-[#D98DBB] max-w-md mx-auto mb-6">Join thousands of investors, businesses, and creators already growing on yoInfo.</p>
             <div className="flex gap-3 justify-center flex-wrap">
               <Link href="/auth?tab=signup" className="bg-white text-[#3D0231] font-bold px-6 py-3 rounded-xl hover:bg-[#FF97CC] transition-colors">
                 Create Free Account
-              </Link>
-              <Link href="/investments" className="border border-white/40 text-white font-bold px-6 py-3 rounded-xl hover:border-white transition-colors">
-                Browse Investments
               </Link>
             </div>
           </section>
@@ -350,10 +627,13 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
             <img src="/YoINFOlogo.png" alt="yoInfo" className="h-6" />
           </div>
           <div className="flex gap-6 text-sm text-gray-400">
-            <Link href="/flipper" className="hover:text-[#8A0260]">Fliiper</Link>
-            <Link href="/investments" className="hover:text-[#8A0260]">Investments</Link>
-            <Link href="/invoices" className="hover:text-[#8A0260]">Invoices</Link>
+            <Link href="/flipper" className="hover:text-[#8A0260]">About Fliiper</Link>
+            <Link href="/investments" className="hover:text-[#8A0260]">Investment Profiler</Link>
+            <Link href="/poster/dashboard" className="hover:text-[#8A0260]">Update Wizard</Link>
             <Link href="/messaging" className="hover:text-[#8A0260]">Blast Wizard</Link>
+            <Link href="/invoices" className="hover:text-[#8A0260]">Invoice Wizard</Link>
+            <Link href="/#developers" className="hover:text-[#8A0260]">Developers</Link>
+            <Link href="/wallet" className="hover:text-[#8A0260]">Ibiceri Wallet</Link>
           </div>
           <div className="text-xs text-gray-400 w-full text-center sm:w-auto">&copy; 2026 yoInfo. All rights reserved.</div>
         </div>
