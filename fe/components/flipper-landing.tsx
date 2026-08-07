@@ -22,7 +22,7 @@ const TOOL_CARDS = [
     ],
     hashtags: '#Expo2026  #RITF  #SmartNetworking',
     context: {
-      eyebrow: 'Meet yoInfo Fliiper',
+      eyebrow: ' Fliiper',
       desc: <><strong>yoInfo <em>Fliiper</em> lets busy professionals flip through curated news, deals, tenders, and jobs in seconds</strong> — no noise, just what matters, in five languages.</>,
       primary: { label: 'Browse Feed', href: '/flipper' },
       secondary: { label: 'Create Free Account', href: '/auth?tab=signup' },
@@ -49,7 +49,7 @@ const TOOL_CARDS = [
     ],
     hashtags: '#Post  #Update  #Blast',
     context: {
-      eyebrow: 'Meet yoInfo Update Wizard',
+      eyebrow: ' Update Wizard',
       desc: <><strong>Update Wizard lets you share news, events, and announcements with your audience</strong> — add images, links, and a call-to-action from one place.</>,
       primary: { label: 'Create a Post', href: '/poster/dashboard' },
       secondary: { label: 'Create Free Account', href: '/auth?tab=signup' },
@@ -76,7 +76,7 @@ const TOOL_CARDS = [
     ],
     hashtags: '#BlastWizard  #Messaging',
     context: {
-      eyebrow: 'Meet yoInfo Blast Wizard',
+      eyebrow: ' Blast Wizard',
       desc: <><strong>Blast Wizard sends your message to WhatsApp, SMS, and email from one place</strong> — upload contacts, write once, and blast to everyone at once.</>,
       primary: { label: 'Send a Blast', href: '/messaging' },
       secondary: { label: 'Create Free Account', href: '/auth?tab=signup' },
@@ -103,7 +103,7 @@ const TOOL_CARDS = [
     ],
     hashtags: '#Invoicing  #RRAEBM',
     context: {
-      eyebrow: 'Meet yoInfo Invoice Wizard',
+      eyebrow: ' Invoice Wizard',
       desc: <><strong>Invoice Wizard creates RRA/EBM-compliant invoices and receipts, numbered automatically</strong> — and sends them by WhatsApp, Email, or SMS link.</>,
       primary: { label: 'Create an Invoice', href: '/invoices' },
       secondary: { label: 'Create Free Account', href: '/auth?tab=signup' },
@@ -128,7 +128,7 @@ const TOOL_CARDS = [
     ],
     hashtags: '#BusinessProfile  #Growth',
     context: {
-      eyebrow: 'Meet yoInfo Business Profiling',
+      eyebrow: ' Business Profiling',
       desc: <><strong>Business Profiling gives your business a professional profile</strong> — logo, services, and contact details, all in one place.</>,
       primary: { label: 'Build Your Profile', href: '/business' },
       secondary: { label: 'Create Free Account', href: '/auth?tab=signup' },
@@ -154,7 +154,7 @@ const TOOL_CARDS = [
     ],
     hashtags: '#Investments  #Opportunities',
     context: {
-      eyebrow: 'Meet yoInfo Investments',
+      eyebrow: ' Investments',
       desc: <><strong>yoInfo Investments brings you vetted opportunities</strong> across real estate, agriculture, energy, and more.</>,
       primary: { label: 'Browse Investments', href: '/investments' },
       secondary: { label: 'Create Free Account', href: '/auth?tab=signup' },
@@ -183,7 +183,7 @@ const FLIPPER_CARDS = [
     ],
     hashtags: '#Expo2026  #RITF  #SmartNetworking',
     context: {
-      eyebrow: 'Meet yoInfo Fliiper',
+      eyebrow: ' Fliiper',
       desc: <><strong>yoInfo <em>Fliiper</em> lets busy professionals flip through curated news, deals, tenders, and jobs in seconds</strong> — no noise, just what matters, in five languages.</>,
       primary: { label: 'Browse Feed', href: '/flipper' },
       secondary: { label: 'Create Free Account', href: '/auth?tab=signup' },
@@ -208,7 +208,7 @@ const FLIPPER_CARDS = [
     ],
     hashtags: '#RITF2026  #ExpoGuide',
     context: {
-      eyebrow: 'Meet yoInfo Fliiper',
+      eyebrow: ' Fliiper',
       desc: <><strong>yoInfo <em>Fliiper</em> lets busy professionals flip through curated news, deals, tenders, and jobs in seconds</strong> — no noise, just what matters, in five languages.</>,
       primary: { label: 'Browse Feed', href: '/flipper' },
       secondary: { label: 'Create Free Account', href: '/auth?tab=signup' },
@@ -400,7 +400,7 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
             <Link href="/investments" className="group option-card">
               <div className="flex gap-4">
                 <div className="w-20 sm:w-24 shrink-0 self-stretch rounded-xl overflow-hidden">
-                  <img src="/card1.png" alt="" className="w-full h-full object-cover" />
+                  <img src="/investment.png" alt="" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex flex-col gap-3.5 flex-1">
                   <div className="option-icon">
@@ -416,7 +416,7 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
             <Link href="/poster/dashboard" className="group option-card">
               <div className="flex gap-4">
                 <div className="w-20 sm:w-24 shrink-0 self-stretch rounded-xl overflow-hidden">
-                  <img src="/card2.png" alt="" className="w-full h-full object-cover" />
+                  <img src="/card3.png" alt="" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex flex-col gap-3.5 flex-1">
                   <div className="option-icon">
@@ -438,7 +438,7 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
             <Link href="/messaging" className="group option-card featured">
               <div className="flex gap-4">
                 <div className="w-20 sm:w-24 shrink-0 self-stretch rounded-xl overflow-hidden">
-                  <img src="/card3.png" alt="" className="w-full h-full object-cover" />
+                  <img src="/card2.png" alt="" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex flex-col gap-3.5 flex-1">
                   <div className="option-icon">
@@ -459,7 +459,7 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
             <Link href="/invoices" className="group option-card">
               <div className="flex gap-4">
                 <div className="w-20 sm:w-24 shrink-0 self-stretch rounded-xl overflow-hidden">
-                  <img src="/card4.png" alt="" className="w-full h-full object-cover" />
+                  <img src="/card1.png" alt="" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex flex-col gap-3.5 flex-1">
                   <div className="option-icon">
