@@ -327,7 +327,7 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
           {/* Phone Mockup + Figure */}
           <div className="flex justify-center items-stretch gap-6">
             <div className="flip-hero-figure">
-              <img src="/man_standing_sending_message2.png" alt="yoInfo Fliiper user" className="flip-hero-figure-img" />
+              <img src="/man_standing_sending_message6.png" alt="yoInfo Fliiper user" className="flip-hero-figure-img" />
             </div>
             <div className="flip-phone-mockup">
               <div className="flip-phone-notch" />
