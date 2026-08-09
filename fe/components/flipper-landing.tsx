@@ -295,7 +295,7 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
         {/* Hero Section */}
         <div className="hero-dots rounded-[2rem] grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-20 px-6 sm:px-10 py-12 sm:py-16">
           <div>
-            <img src="/YoINFOlogo.png" alt="yoInfo" className="h-8 mb-5" />
+            <img src="/yoinfoIcon.png" alt="yoInfo" className="h-8 mb-5" />
             <div className="inline-flex items-center gap-2 text-xs font-bold text-[#8A0260] bg-[#FBEAF5] px-3 py-1.5 rounded-full mb-4 uppercase tracking-wider">
               <span className="w-1.5 h-1.5 rounded-full bg-[#FF6FB5]" />
               {cards[currentCard].context.eyebrow}
@@ -334,7 +334,9 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
               <div className="flip-phone-screen">
                 <div className="flip-topbar">
                   <div className="flex items-center gap-2">
-                    <div className="flip-brand-icon">i</div>
+                    <div className="flip-brand-icon">
+                      <img src="/yoinfoIcon.png" alt="yoInfo" className="w-full h-full object-cover rounded-[7px]" />
+                    </div>
                     <div>
                       <div className="flip-brand-name">yoInfo</div>
                       <div className="flip-brand-tag">stay in the loop</div>
@@ -396,13 +398,13 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
             <div className="text-xs font-bold text-[#8A0260] bg-[#FBEAF5] px-3 py-1 rounded-full inline-block mb-3 uppercase tracking-wider">For businesses</div>
             <p className="text-lg sm:text-xl font-extrabold text-gray-900 leading-relaxed">Whether you&apos;re growing capital, growing an audience, or growing a customer list — these are the tools that get your business in front of yoInfo&apos;s readers.</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 auto-rows-fr gap-4">
             <Link href="/investments" className="group option-card">
-              <div className="flex gap-4">
-                <div className="w-20 sm:w-24 shrink-0 self-stretch rounded-xl overflow-hidden">
+              <div className="flex gap-4 flex-1">
+                <div className="w-20 sm:w-24 shrink-0 self-stretch rounded-l-xl overflow-hidden">
                   <img src="/investment.png" alt="" className="w-full h-full object-cover" />
                 </div>
-                <div className="flex flex-col gap-3.5 flex-1">
+                <div className="flex flex-col py-4 pr-3 gap-3.5 flex-1">
                   <div className="option-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C1027D" strokeWidth="1.8"><path d="M3 17l6-6 4 4 8-9" strokeLinecap="round" strokeLinejoin="round"/><path d="M15 6h6v6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </div>
@@ -414,11 +416,11 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
             </Link>
 
             <Link href="/poster/dashboard" className="group option-card">
-              <div className="flex gap-4">
-                <div className="w-20 sm:w-24 shrink-0 self-stretch rounded-xl overflow-hidden">
+              <div className="flex gap-4 flex-1">
+                <div className="w-20 sm:w-24 shrink-0 self-stretch rounded-l-xl overflow-hidden">
                   <img src="/card3.png" alt="" className="w-full h-full object-cover" />
                 </div>
-                <div className="flex flex-col gap-3.5 flex-1">
+                <div className="flex py-4 pr-3 flex-col gap-3.5 flex-1">
                   <div className="option-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C1027D" strokeWidth="1.8"><path d="M3 11l18-7-7 18-2.5-7.5L3 11z" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </div>
@@ -436,11 +438,11 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
             </Link>
 
             <Link href="/messaging" className="group option-card featured">
-              <div className="flex gap-4">
-                <div className="w-20 sm:w-24 shrink-0 self-stretch rounded-xl overflow-hidden">
+              <div className="flex gap-4 flex-1">
+                <div className="w-20 sm:w-24 shrink-0 self-stretch rounded-l-xl overflow-hidden">
                   <img src="/card2.png" alt="" className="w-full h-full object-cover" />
                 </div>
-                <div className="flex flex-col gap-3.5 flex-1">
+                <div className="flex py-4 pr-3 flex-col gap-3.5 flex-1">
                   <div className="option-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3D0231" strokeWidth="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </div>
@@ -457,11 +459,11 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
             </Link>
 
             <Link href="/invoices" className="group option-card">
-              <div className="flex gap-4">
-                <div className="w-20 sm:w-24 shrink-0 self-stretch rounded-xl overflow-hidden">
+              <div className="flex gap-4 flex-1">
+                <div className="w-20 sm:w-24 shrink-0 self-stretch rounded-l-xl overflow-hidden">
                   <img src="/card1.png" alt="" className="w-full h-full object-cover" />
                 </div>
-                <div className="flex flex-col gap-3.5 flex-1">
+                <div className="flex py-4 pr-3 flex-col gap-3.5 flex-1">
                   <div className="option-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C1027D" strokeWidth="1.8"><path d="M9 7h6M9 11h6M9 15h3" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 3h9l3 3v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </div>
@@ -632,7 +634,7 @@ export default function FlipperLanding({ variant = 'landing' }: { variant?: 'lan
             <Link href="/poster/dashboard" className="hover:text-[#8A0260]">Update Wizard</Link>
             <Link href="/messaging" className="hover:text-[#8A0260]">Blast Wizard</Link>
             <Link href="/invoices" className="hover:text-[#8A0260]">Invoice Wizard</Link>
-            <Link href="/#developers" className="hover:text-[#8A0260]">Developers</Link>
+            {/* <Link href="/#developers" className="hover:text-[#8A0260]">Developers</Link> */}
             <Link href="/wallet" className="hover:text-[#8A0260]">Ibiceri Wallet</Link>
           </div>
           <div className="text-xs text-gray-400 w-full text-center sm:w-auto">&copy; 2026 yoInfo. All rights reserved.</div>
