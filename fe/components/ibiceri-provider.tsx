@@ -17,6 +17,7 @@ interface IbiceriContextValue {
   spend: (amount: number, label?: string) => boolean;
   clearShortfall: () => void;
   openPayment: (amount: number, price: number) => void;
+  topUp: (amount: number, label: string) => void;
 }
 
 const IbiceriContext = createContext<IbiceriContextValue | null>(null);
@@ -165,6 +166,20 @@ export default function IbiceriProvider({ children }: { children: ReactNode }) {
     }, 2200);
   }, [payMethod, payNumber, payCardNumber, payCardExpiry, payCardCvv, payAmount, showToast]);
 
+  const topUp = useCallback((amount: number, label: string) => {
+    const when = new Date().toLocaleString();
+    const tx = { label, amount, type: 'credit' as const, when };
+    setBalance(prev => {
+      const next = prev + amount;
+      setTransactions(prevTx => {
+        const all = [...prevTx, tx];
+        persist(next, all);
+        return all;
+      });
+      return next;
+    });
+  }, []);
+
   const value: IbiceriContextValue = {
     balance,
     transactions,
@@ -172,6 +187,7 @@ export default function IbiceriProvider({ children }: { children: ReactNode }) {
     spend,
     clearShortfall,
     openPayment,
+    topUp,
   };
 
   return (

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import IbiceriProvider from "@/components/ibiceri-provider";
+import SiteNav from "@/components/SiteNav";
+import Footer from "@/components/Footer";
 import "./globals.css";
 
 const montserrat = Montserrat({
@@ -23,9 +25,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${montserrat.variable} antialiased bg-white text-gray-900 min-h-screen`}
+        className={`${montserrat.variable} antialiased min-h-screen`}
+        style={{ fontFamily: "'Montserrat', sans-serif", background: '#FBF6F9', color: '#241019' }}
       >
-        <IbiceriProvider>{children}</IbiceriProvider>
+        <IbiceriProvider>
+          <SiteNav />
+          <main>{children}</main>
+          <Footer />
+        </IbiceriProvider>
       </body>
     </html>
   );

@@ -1,371 +1,382 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { createPost, fetchPosts, fetchTags } from '@/lib/api';
+import { createPost, fetchPosts } from '@/lib/api';
 import { API_URL } from '@/lib/config';
-import ToolLayout from '@/components/tool-layout';
 import ProtectedRoute from '@/components/protected-route';
 
-const TOOL_NAV = [
-  { label: 'Update Wizard', href: '/poster/dashboard', icon: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z' },
-  { label: 'Blast Wizard', href: '/messaging', icon: 'M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.111.431-.173.869-.173 1.315 0 .447.062.884.173 1.315m0-9.665a24.301 24.301 0 003.484.045m-3.484 0a24.27 24.27 0 01-3.484-.045' },
-  { label: 'Invoice Wizard', href: '/invoices', icon: 'M9 7h6M9 11h6M9 15h3M6 3h9l3 3v15a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1z' },
-  { label: 'Business Profiling', href: '/business', icon: 'M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72l1.189-1.19A1.5 1.5 0 0113.5 9h1.5a1.5 1.5 0 011.5 1.5v8.25' },
-  { label: 'Fliiper', href: '/flipper', icon: 'M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15a2.25 2.25 0 012.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z' },
+const CTA_OPTIONS = [
+  'Explore Opportunity','Discover More','Get Started','Take Action Today','Learn More',
+  'Join Now','Sign Up Free','Book a Visit','Contact Us','View Details','Claim Offer',
+  'Request Info','Start Investing','See Listing','Reserve Spot','Apply Now','Shop Now',
+  'Watch Video','Download Guide','Follow Updates','Subscribe',
 ];
 
-const MAX_WORDS = 250;
-const MAX_HEADER_CHARS = 200;
-
-const CTA_CATEGORIES = {
-  'Contact & Inquiries': ['Book Now', 'Schedule a Visit', 'Request a Quote', 'Get a Consultation'],
-  'E-Commerce': ['Reserve Your Spot', 'Order Now', 'Browse Catalogue', 'Add to Cart'],
-  'Events & RSVP': ['Reserve Your Spot', 'Register Now', 'Sign Up Today', 'Join Now'],
-  'Appointments & Visits': ['Book Now', 'Schedule a Visit', 'Get a Consultation', 'Reserve Your Spot'],
-  'Engagement': ['Explore Opportunity', 'View Full Profile', 'Start a Conversation', 'Discover More', 'Go for It', "Don't Miss Out", 'Grab This Offer', 'Take Action Today', 'Get Started', 'Claim Your Listing'],
-};
-
-type ViewType = 'compose' | 'published' | 'settings';
+const CHANNELS = [
+  { id: 'fliiper', name: 'Fliiper', cost: 0, icon: '📰' },
+  { id: 'instagram', name: 'Instagram', cost: 5, icon: '📸' },
+  { id: 'facebook', name: 'Facebook', cost: 5, icon: '📘' },
+  { id: 'tiktok', name: 'TikTok', cost: 5, icon: '🎵' },
+];
 
 export default function PosterDashboard() {
-  const [view, setView] = useState<ViewType>('compose');
+  return (
+    <ProtectedRoute>
+      <UpdateWizardContent />
+    </ProtectedRoute>
+  );
+}
+
+function UpdateWizardContent() {
+  const router = useRouter();
+  const [step, setStep] = useState(1);
   const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [body, setBody] = useState('');
+  const [link, setLink] = useState('');
+  const [selectedCta, setSelectedCta] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isDragOver, setIsDragOver] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [links, setLinks] = useState<{ url: string; title?: string }[]>([]);
-  const [newLinkUrl, setNewLinkUrl] = useState('');
-  const [newLinkTitle, setNewLinkTitle] = useState('');
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [selectedAction, setSelectedAction] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [filter, setFilter] = useState('none');
+  const [crop, setCrop] = useState('square');
+  const [designTpl, setDesignTpl] = useState('bold');
+  const [activeChannels, setActiveChannels] = useState<string[]>(['fliiper']);
+  const [channelSchedule, setChannelSchedule] = useState<Record<string, { time: string; lang: string }>>({});
+  const [previewTab, setPreviewTab] = useState('yoinfo');
   const [posts, setPosts] = useState<any[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [tags, setTags] = useState<any[]>([]);
-
+  const [publishing, setPublishing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    if (!token || !storedUser) { router.push('/auth'); return; }
     fetchPosts().then(setPosts).catch(console.error).finally(() => setLoadingPosts(false));
-  }, [router]);
+  }, []);
 
-  useEffect(() => { fetchTags().then(setTags).catch(console.error); }, []);
+  const toggleChannel = (id: string) => {
+    setActiveChannels(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
+  };
 
   const handleImageSelect = (file: File | null) => {
-    if (!file || !['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) return;
+    if (!file || !['image/jpeg','image/png','image/gif','image/webp'].includes(file.type)) return;
     setImageFile(file);
     const reader = new FileReader();
     reader.onload = (e) => setImagePreview(e.target?.result as string);
     reader.readAsDataURL(file);
   };
 
-  const removeImage = () => { setImageFile(null); setImagePreview(null); if (fileInputRef.current) fileInputRef.current.value = ''; };
+  const estimatedCost = activeChannels.reduce((sum, id) => {
+    const ch = CHANNELS.find(c => c.id === id);
+    return sum + (ch?.cost || 0);
+  }, 0);
 
-  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
-  const isOverWordLimit = wordCount > MAX_WORDS;
-  const canPublish = content.trim().length > 0 && !isOverWordLimit && selectedAction;
+  const goStep = (s: number) => { setStep(s); window.scrollTo(0, 0); };
 
-  const handleAddLink = () => {
-    if (!newLinkUrl.trim()) return;
-    try { new URL(newLinkUrl); } catch { return; }
-    setLinks(prev => [...prev, { url: newLinkUrl, title: newLinkTitle || undefined }]);
-    setNewLinkUrl(''); setNewLinkTitle('');
-  };
-
-  const resetForm = () => {
-    setTitle(''); setContent(''); removeImage(); setSelectedTags([]);
-    setLinks([]); setSelectedEventId(null); setSelectedAction(null);
-  };
-
-  const handlePublish = async () => {
-    setIsSubmitting(true); setMessage(null);
+  const publish = async () => {
+    setPublishing(true);
     try {
       const token = localStorage.getItem('token');
       let imageUrl = '';
-      if (imageFile) {
-        const formData = new FormData();
-        formData.append('image', imageFile);
-        const uploadRes = await fetch(`${API_URL}/api/upload`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData });
-        if (!uploadRes.ok) throw new Error('Failed to upload image');
-        const uploadData = await uploadRes.json();
-        imageUrl = uploadData.url;
+      if (imageFile && token) {
+        const fd = new FormData();
+        fd.append('image', imageFile);
+        const res = await fetch(`${API_URL}/api/upload`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+        if (res.ok) { const d = await res.json(); imageUrl = d.url; }
       }
-      const enrichedContent = selectedAction ? `${content}\n\n[${selectedAction}]` : content;
-      const newPost = await createPost(enrichedContent, token!, title, imageUrl, selectedTags, links, selectedEventId || undefined);
-      resetForm();
+      const enriched = selectedCta ? `${body}\n\n[${selectedCta}]` : body;
+      const newPost = await createPost(enriched, token!, title, imageUrl);
       setPosts(prev => [newPost, ...prev]);
-      setMessage({ type: 'success', text: 'Update published successfully!' });
-      setTimeout(() => setMessage(null), 5000);
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Failed to publish update.' });
-    } finally { setIsSubmitting(false); }
+      setStep(1); setTitle(''); setBody(''); setLink(''); setSelectedCta(null);
+      setImageFile(null); setImagePreview(null); setActiveChannels(['fliiper']);
+    } catch (err) { console.error(err); }
+    finally { setPublishing(false); }
   };
 
   return (
-    <ProtectedRoute>
-      <ToolLayout
-        title=""
-        subtitle=""
-        navItems={TOOL_NAV}
-      >
-        {/* View Tabs */}
-        <div className="flex items-center gap-4 mb-6">
-          {(['compose', 'published', 'settings'] as ViewType[]).map(v => (
-            <button
-              key={v}
-              onClick={() => setView(v)}
-              className={`text-sm font-bold pb-2 border-b-2 transition-colors capitalize ${
-                view === v ? 'text-[#C1027D] border-[#C1027D]' : 'text-gray-400 border-transparent hover:text-gray-600'
-              }`}
-            >
-              {v}
-            </button>
-          ))}
+    <div className="app">
+      <aside className="sidebar">
+        <div className="wizard-nav-row">
+          <Link href="/" className="wizard-nav-btn">← Back</Link>
+          <Link href="/" className="wizard-nav-btn">⌂ Home</Link>
+        </div>
+        <div className="brand">
+          <div className="brand-mark">U</div>
+          <div><div className="brand-name">Update Wizard</div><div className="brand-sub">Invest, publish &amp; go social</div></div>
+        </div>
+        <div className="submodule-switcher">
+          <Link href="/investments" className="submodule-tab"><span className="submodule-icon">📈</span> Investment Profiler</Link>
+          <div className="submodule-tab active"><span className="submodule-icon">📣</span> Go Social</div>
+        </div>
+        <nav>
+          <div className={`tool-nav-item${step >= 1 ? ' active' : ''}`} onClick={() => goStep(1)}><span className="nav-dot" /> Compose</div>
+          <div className="tool-nav-item"><span className="nav-dot" /> Published Posts</div>
+          <div className="tool-nav-item"><span className="nav-dot" /> Settings</div>
+        </nav>
+        <div className="sidebar-foot">Share news, events, and announcements with a call-to-action your audience can act on.</div>
+      </aside>
+
+      <main>
+        <div className="topbar">
+          <div>
+            <h1>Compose</h1>
+            <p>Write once, add a call-to-action, and publish.</p>
+          </div>
         </div>
 
-        {/* ═══ COMPOSE ═══ */}
-        {view === 'compose' && (
-          <div className="grid lg:grid-cols-2 gap-6 animate-fade-in-up">
-            {/* Form */}
-            <div className="space-y-5">
-              {message && (
-                <div className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium ${
-                  message.type === 'success' ? 'bg-[#D93F9E]/5 border border-[#D93F9E]/20 text-[#C1027D]' : 'bg-red-50 border border-red-200 text-red-700'
-                }`}>
-                  {message.text}
-                </div>
-              )}
+        <section>
+          <div className="step-indicator">
+            <div className={`step-dot${step === 1 ? ' active' : step > 1 ? ' done' : ''}`}>1</div><div className="step-line" />
+            <div className={`step-dot${step === 2 ? ' active' : step > 2 ? ' done' : ''}`}>2</div><div className="step-line" />
+            <div className={`step-dot${step === 3 ? ' active' : step > 3 ? ' done' : ''}`}>3</div><div className="step-line" />
+            <div className={`step-dot${step === 4 ? ' active' : ''}`}>4</div>
+          </div>
+          <div className="step-labels" style={{ gap: 26 }}>
+            <span className={step === 1 ? 'active' : ''}>Content</span>
+            <span className={step === 2 ? 'active' : ''}>Creative</span>
+            <span className={step === 3 ? 'active' : ''}>Channels</span>
+            <span className={step === 4 ? 'active' : ''}>Review</span>
+          </div>
 
-              <div className="card space-y-5">
-                <div>
-                  <h3 className="font-bold text-lg text-gray-900 mb-1">What offer do you have today?</h3>
-                </div>
-
-                {/* Title */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Title (optional)</label>
-                  <input type="text" value={title} onChange={e => setTitle(e.target.value)} maxLength={MAX_HEADER_CHARS} placeholder="Give your post a catchy headline..." className="input" />
-                </div>
-
-                {/* Content */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Content *</label>
-                  <textarea value={content} onChange={e => setContent(e.target.value)} className="textarea min-h-[160px]" placeholder="Share your update, announcement, or news..." autoFocus />
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="flex items-center gap-2">
-                      <div className="h-1.5 w-32 rounded-full overflow-hidden bg-gray-200">
-                        <div className={`h-full rounded-full transition-all duration-300 ${wordCount === 0 ? 'w-0 bg-gray-300' : isOverWordLimit ? 'w-full bg-red-500' : wordCount > MAX_WORDS * 0.8 ? 'w-5/6 bg-amber-500' : 'w-1/2 bg-[#C1027D]'}`} />
-                      </div>
-                      <span className={`text-xs font-semibold tabular-nums ${isOverWordLimit ? 'text-red-500' : wordCount > MAX_WORDS * 0.8 ? 'text-amber-500' : 'text-gray-400'}`}>
-                        {wordCount}/{MAX_WORDS}
-                      </span>
-                    </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 20, alignItems: 'start', maxWidth: 1180 }}>
+            <div className="card">
+              {/* STEP 1: CONTENT */}
+              <div className={`compose-step-panel${step === 1 ? ' show' : ''}`}>
+                <div className="step-illustration-row">
+                  <svg className="step-illustration-icon" viewBox="0 0 64 64" fill="none">
+                    <circle cx="32" cy="32" r="30" fill="#FBEAF5" />
+                    <path d="M14 26v12a4 4 0 0 0 4 4h4l10 8V14l-10 8h-4a4 4 0 0 0-4 4z" fill="#C1027D" />
+                    <path d="M40 24c3 2.5 3 13.5 0 16" stroke="#8A0260" strokeWidth="3" strokeLinecap="round" />
+                    <path d="M46 19c6 5 6 21 0 26" stroke="#8A0260" strokeWidth="3" strokeLinecap="round" />
+                  </svg>
+                  <div className="step-illustration-text">
+                    <div className="step-illustration-title">Write your update</div>
+                    <div className="step-illustration-caption">Add a headline, a picture, and a button.</div>
                   </div>
                 </div>
-
-                {/* Image */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Image (optional)</label>
-                  {imagePreview ? (
-                    <div className="relative rounded-xl overflow-hidden border-2 border-[#f0e4ec] group">
-                      <img src={imagePreview} alt="Preview" className="w-full max-h-48 object-cover" />
-                      <button onClick={removeImage} className="absolute top-2 right-2 px-3 py-1.5 bg-white rounded-lg text-xs font-semibold text-gray-900 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">Remove</button>
-                    </div>
-                  ) : (
-                    <div onDragOver={e => { e.preventDefault(); setIsDragOver(true); }} onDragLeave={() => setIsDragOver(false)} onDrop={e => { e.preventDefault(); setIsDragOver(false); handleImageSelect(e.dataTransfer.files?.[0] || null); }} onClick={() => fileInputRef.current?.click()} className={`dropzone ${isDragOver ? 'dragover' : ''}`}>
-                      <div className="font-semibold text-sm text-gray-600">Click to upload or drag and drop</div>
-                      <div className="text-xs text-gray-400 mt-1">JPEG, PNG, GIF, WebP</div>
-                    </div>
-                  )}
-                  <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" onChange={e => handleImageSelect(e.target.files?.[0] || null)} className="hidden" />
+                <div className="field-group" style={{ marginTop: 14 }}>
+                  <label className="field-label">Headline</label>
+                  <input type="text" className="input" placeholder="e.g. New guided hikes now bookable" value={title} onChange={e => setTitle(e.target.value)} />
                 </div>
+                <div className="field-group" style={{ marginTop: 14 }}>
+                  <label className="field-label">Details</label>
+                  <textarea className="textarea" placeholder="Tell your audience what's happening…" value={body} onChange={e => setBody(e.target.value)} />
+                </div>
+                <div className="field-group" style={{ marginTop: 14 }}>
+                  <label className="field-label">Link (optional)</label>
+                  <input type="url" className="input" placeholder="https://…" value={link} onChange={e => setLink(e.target.value)} />
+                </div>
+                <div className="field-group" style={{ marginTop: 16 }}>
+                  <label className="field-label">Call-to-action — choose 1 of 21</label>
+                  <div className="cta-picker">
+                    {CTA_OPTIONS.map(c => (
+                      <div key={c} className={`cta-opt${selectedCta === c ? ' selected' : ''}`} onClick={() => setSelectedCta(c)}>{c}</div>
+                    ))}
+                  </div>
+                </div>
+                <div className="compose-step-nav"><span /><button type="button" className="btn-solid" onClick={() => goStep(2)}>Next: Creative →</button></div>
+              </div>
 
-                {/* Tags */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Tags (optional)</label>
-                  <div className="flex flex-wrap gap-2">
-                    {tags.map((tag: any) => {
-                      const isSelected = selectedTags.includes(tag.id);
+              {/* STEP 2: CREATIVE */}
+              <div className={`compose-step-panel${step === 2 ? ' show' : ''}`}>
+                <div className="step-illustration-row">
+                  <svg className="step-illustration-icon" viewBox="0 0 64 64" fill="none">
+                    <circle cx="32" cy="32" r="30" fill="#FBEAF5" />
+                    <rect x="14" y="18" width="28" height="22" rx="3" fill="#C1027D" />
+                    <circle cx="21" cy="26" r="3" fill="#fff" />
+                    <path d="M14 36l7-7 6 5 8-9 7 8v4a3 3 0 0 1-3 3H17a3 3 0 0 1-3-3z" fill="#8FD14F" />
+                  </svg>
+                  <div className="step-illustration-text">
+                    <div className="step-illustration-title">Make it look good</div>
+                    <div className="step-illustration-caption">Drag a photo in, or upload your own finished picture.</div>
+                  </div>
+                </div>
+                <div className="field-group">
+                  <label className="field-label">Image</label>
+                  <div className="photo-upload-wrap">
+                    {imagePreview ? (
+                      <div className="photo-preview-box">
+                        <img src={imagePreview} alt="Preview" />
+                      </div>
+                    ) : (
+                      <label className="dropzone" onClick={() => fileInputRef.current?.click()}>
+                        <svg className="dropzone-illustration" viewBox="0 0 48 48" fill="none">
+                          <rect x="6" y="20" width="36" height="20" rx="4" fill="#FBEAF5" />
+                          <path d="M24 6v22M24 6l-8 8M24 6l8 8" stroke="#C1027D" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <div className="main-txt">Click to attach an image</div>
+                        <div className="sub-txt">or drag a photo here</div>
+                      </label>
+                    )}
+                    <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleImageSelect(e.target.files?.[0] || null)} />
+                  </div>
+                  <div className="photo-tool-label">Filter</div>
+                  <div className="photo-tool-row">
+                    {['none','vivid','bw','warm','cool'].map(f => (
+                      <button key={f} type="button" className={`photo-tool-btn${filter === f ? ' active' : ''}`} onClick={() => setFilter(f)}>{f === 'bw' ? 'B&W' : f.charAt(0).toUpperCase() + f.slice(1)}</button>
+                    ))}
+                  </div>
+                  <div className="photo-tool-label">Crop</div>
+                  <div className="photo-tool-row">
+                    {['square','portrait','landscape'].map(c => (
+                      <button key={c} type="button" className={`photo-tool-btn${crop === c ? ' active' : ''}`} onClick={() => setCrop(c)}>{c.charAt(0).toUpperCase() + c.slice(1)}</button>
+                    ))}
+                  </div>
+                </div>
+                <div className="field-group" style={{ marginTop: 16 }}>
+                  <label className="field-label">Design template</label>
+                  <div className="design-tpl-row">
+                    {['bold','minimal','festive','corporate'].map(t => (
+                      <div key={t} className={`design-tpl ${t}${designTpl === t ? ' selected' : ''}`} onClick={() => setDesignTpl(t)}>{t.charAt(0).toUpperCase() + t.slice(1)}</div>
+                    ))}
+                  </div>
+                </div>
+                <div className="compose-step-nav"><button type="button" className="btn-ghost" onClick={() => goStep(1)}>← Back</button><button type="button" className="btn-solid" onClick={() => goStep(3)}>Next: Channels →</button></div>
+              </div>
+
+              {/* STEP 3: CHANNELS */}
+              <div className={`compose-step-panel${step === 3 ? ' show' : ''}`}>
+                <div className="step-illustration-row">
+                  <svg className="step-illustration-icon" viewBox="0 0 64 64" fill="none">
+                    <circle cx="32" cy="32" r="30" fill="#FBEAF5" />
+                    <circle cx="20" cy="22" r="6" fill="#C1027D" />
+                    <circle cx="44" cy="18" r="5" fill="#8FD14F" />
+                    <circle cx="46" cy="42" r="6" fill="#E8862B" />
+                    <circle cx="18" cy="44" r="5" fill="#8A0260" />
+                    <path d="M20 22l24-4M20 22l26 20M44 18l2 24" stroke="#C1027D" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                  <div className="step-illustration-text">
+                    <div className="step-illustration-title">Choose where it goes</div>
+                    <div className="step-illustration-caption">Pick the apps to send to, and words that describe your post.</div>
+                  </div>
+                </div>
+                <div className="fliiper-free-banner">
+                  <span>🎉</span>
+                  <span><b>Fliiper is free.</b> No Ibiceri needed to post there — but you must pick at least one hashtag so the right people see it.</span>
+                </div>
+                <div className="field-group" style={{ marginTop: 14 }}>
+                  <label className="field-label">Post to — schedule and language, channel by channel</label>
+                  <div className="chan-sched-list">
+                    {CHANNELS.map(ch => {
+                      const on = activeChannels.includes(ch.id);
+                      const sched = channelSchedule[ch.id] || { time: '', lang: 'en' };
                       return (
-                        <button key={tag.id} onClick={() => setSelectedTags(prev => isSelected ? prev.filter(id => id !== tag.id) : [...prev, tag.id])} className={`chip ${isSelected ? 'active' : ''}`}>
-                          {tag.label}
-                        </button>
+                        <div key={ch.id} className={`chan-sched-row${on ? ' on' : ''}`}>
+                          <div className="chan-sched-top">
+                            <div className="chan-sched-name" onClick={() => toggleChannel(ch.id)}>
+                              <span className="dot" /> {ch.icon} {ch.name}
+                            </div>
+                            {ch.cost > 0 && <span className="chan-cost-tag">{ch.cost} Ibiceri</span>}
+                          </div>
+                          {on && (
+                            <div className="chan-sched-detail">
+                              <label>Language</label>
+                              <select value={sched.lang} onChange={e => setChannelSchedule(prev => ({ ...prev, [ch.id]: { ...sched, lang: e.target.value } }))}>
+                                <option value="en">English</option>
+                                <option value="rw">Kinyarwanda</option>
+                              </select>
+                              <label>Schedule</label>
+                              <input type="datetime-local" value={sched.time} onChange={e => setChannelSchedule(prev => ({ ...prev, [ch.id]: { ...sched, time: e.target.value } }))} />
+                            </div>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
                 </div>
-
-                {/* Links */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Links (optional)</label>
-                  <div className="flex gap-2 mb-2">
-                    <input type="url" value={newLinkUrl} onChange={e => setNewLinkUrl(e.target.value)} placeholder="https://..." className="input flex-1" />
-                    <input type="text" value={newLinkTitle} onChange={e => setNewLinkTitle(e.target.value)} placeholder="Title" className="input flex-1" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddLink(); } }} />
-                    <button onClick={handleAddLink} disabled={!newLinkUrl.trim()} className="btn btn-primary text-sm py-2 px-4 disabled:opacity-40">Add</button>
-                  </div>
-                  {links.length > 0 && (
-                    <div className="space-y-2">
-                      {links.map((link, i) => (
-                        <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#FDF4FA] border border-[#f0e4ec]">
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-gray-900 truncate">{link.title || link.url}</div>
-                            <div className="text-xs text-gray-400 truncate">{link.url}</div>
-                          </div>
-                          <button onClick={() => setLinks(prev => prev.filter((_, j) => j !== i))} className="text-gray-400 hover:text-red-500">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* CTA Picker */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Call-to-Action *</label>
-                  <div className="space-y-3">
-                    {(Object.entries(CTA_CATEGORIES) as [string, string[]][]).map(([category, ctas]) => (
-                      <div key={category}>
-                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{category}</div>
-                        <div className="flex flex-wrap gap-2">
-                          {ctas.map(cta => (
-                            <button key={cta} onClick={() => setSelectedAction(cta)} className={`cta-chip ${selectedAction === cta ? 'selected' : ''}`}>
-                              {cta}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Publish */}
-                <button onClick={handlePublish} disabled={isSubmitting || !canPublish} className="btn btn-primary w-full disabled:opacity-40">
-                  {isSubmitting ? 'Publishing...' : 'Publish Update'}
-                  {!isSubmitting && (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-                    </svg>
-                  )}
-                </button>
+                <div className="compose-step-nav"><button type="button" className="btn-ghost" onClick={() => goStep(2)}>← Back</button><button type="button" className="btn-solid" onClick={() => goStep(4)}>Next: Review →</button></div>
               </div>
-            </div>
 
-            {/* Live Preview */}
-            <div className="hidden lg:block">
-              <div className="sticky top-20">
-                <div className="section-heading mb-3">Live Preview</div>
-                <div className="card overflow-hidden">
-                  {imagePreview && <img src={imagePreview} alt="Preview" className="w-full max-h-48 object-cover" />}
-                  <div className="p-5">
-                    {title && <h4 className="font-bold text-base text-gray-900 mb-2">{title}</h4>}
-                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap mb-3">{content || 'Start writing to see a preview...'}</p>
-                    {selectedTags.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-3">
-                        {selectedTags.map(tagId => {
-                          const tag = tags.find((t: any) => t.id === tagId);
-                          return tag ? <span key={tagId} className="px-2 py-0.5 rounded-full bg-[#FBEAF5] text-xs font-semibold text-[#C1027D]">{tag.label}</span> : null;
-                        })}
-                      </div>
-                    )}
-                    {selectedAction && (
-                      <button className="btn btn-primary text-sm py-2 w-full">{selectedAction}</button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ═══ PUBLISHED ═══ */}
-        {view === 'published' && (
-          <div className="space-y-4 animate-fade-in-up">
-            <h3 className="font-bold text-gray-900">Published Posts</h3>
-            {loadingPosts ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map(i => <div key={i} className="card animate-pulse"><div className="h-5 w-3/4 bg-[#FBEAF5] rounded mb-2" /><div className="h-3 w-full bg-[#FDF4FA] rounded" /></div>)}
-              </div>
-            ) : posts.length === 0 ? (
-              <div className="card text-center py-12">
-                <div className="w-16 h-16 rounded-full bg-[#FBEAF5] flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-[#E97BC4]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+              {/* STEP 4: REVIEW */}
+              <div className={`compose-step-panel${step === 4 ? ' show' : ''}`}>
+                <div className="step-illustration-row">
+                  <svg className="step-illustration-icon" viewBox="0 0 64 64" fill="none">
+                    <circle cx="32" cy="32" r="30" fill="#FBEAF5" />
+                    <rect x="16" y="14" width="26" height="34" rx="3" fill="#fff" stroke="#C1027D" strokeWidth="2.5" />
+                    <path d="M21 22h16M21 29h16M21 36h10" stroke="#C1027D" strokeWidth="2.5" strokeLinecap="round" />
+                    <circle cx="41" cy="42" r="11" fill="#8FD14F" />
+                    <path d="M36 42l4 4 6-8" stroke="#1F6B3A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
+                  <div className="step-illustration-text">
+                    <div className="step-illustration-title">Check and send</div>
+                    <div className="step-illustration-caption">Look at the preview, then press the big button.</div>
+                  </div>
                 </div>
-                <h3 className="font-bold text-gray-900 mb-1">No posts yet</h3>
-                <p className="text-sm text-gray-400">Create your first update to get started.</p>
+                <div className="sub-h" style={{ marginTop: 0 }}>Review before you publish</div>
+                <p style={{ fontSize: 12.5, color: 'var(--muted)', fontWeight: 500, marginBottom: 14 }}>Check the preview on the right for every channel you selected, then publish or schedule.</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6, padding: '10px 14px', background: '#FFF7E8', borderRadius: 10 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#8A5A00' }}>Estimated cost</span>
+                  <span className="chan-cost-tag">{estimatedCost} Ibiceri</span>
+                </div>
+                <button className="btn-solid" style={{ width: '100%', padding: 13, marginTop: 16 }} onClick={publish} disabled={publishing || (!body.trim() && !title.trim())}>
+                  {publishing ? 'Publishing…' : 'Publish / Schedule Post'}
+                </button>
+                <div className="compose-step-nav"><button type="button" className="btn-ghost" onClick={() => goStep(3)}>← Back</button><span /></div>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {posts.map((post: any) => (
-                  <div key={post.id} className="card flex items-start gap-4">
-                    {post.imageUrl && <img src={post.imageUrl} alt="" className="w-20 h-20 rounded-xl object-cover flex-shrink-0" />}
-                    <div className="flex-1 min-w-0">
-                      {post.title && <h4 className="font-bold text-gray-900 truncate">{post.title}</h4>}
-                      <p className="text-sm text-gray-500 line-clamp-2 mt-1">{post.content?.replace(/\[.*\]/, '').trim()}</p>
-                      <div className="text-xs text-gray-400 mt-2">{new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-                    </div>
-                    <div className="flex gap-2 flex-shrink-0">
-                      <button className="btn btn-ghost text-xs py-1.5 px-3">View</button>
-                      <button className="btn btn-ghost text-xs py-1.5 px-3">Edit</button>
-                      <button className="btn btn-danger text-xs py-1.5 px-3">Delete</button>
-                    </div>
+            </div>
+
+            {/* PREVIEW PANEL */}
+            <div>
+              <div className="preview-tabs">
+                {['yoinfo','instagram','facebook','tiktok'].map(t => (
+                  <div key={t} className={`preview-tab${previewTab === t ? ' active' : ''}`} onClick={() => setPreviewTab(t)}>
+                    {t === 'yoinfo' ? 'Fliiper' : t.charAt(0).toUpperCase() + t.slice(1)}
+                    <span className="mini-dot" />
                   </div>
                 ))}
               </div>
-            )}
-          </div>
-        )}
 
-        {/* ═══ SETTINGS ═══ */}
-        {view === 'settings' && (
-          <div className="space-y-6 animate-fade-in-up max-w-xl">
-            <h3 className="font-bold text-gray-900">Profile Settings</h3>
-            <div className="card space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Page Name</label>
-                <input type="text" placeholder="Your Page Name" className="input" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
-                <input type="email" placeholder="you@example.com" className="input" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Bio</label>
-                <textarea placeholder="Tell people about yourself..." className="textarea" rows={3} />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Profile Photo</label>
-                <div className="dropzone text-sm py-6">Click to upload photo</div>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
-                <input type="tel" placeholder="+250 7XX XXX XXX" className="input" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Social Links</label>
-                <div className="space-y-2">
-                  {['Website', 'Twitter / X', 'LinkedIn', 'Instagram'].map(platform => (
-                    <input key={platform} type="url" placeholder={`${platform} URL`} className="input" />
-                  ))}
+              <div className={`platform-mock${previewTab === 'yoinfo' ? ' show' : ''}`}>
+                <div className="preview-post-card">
+                  <div className="preview-post-label">yoInfo Fliiper preview</div>
+                  {imagePreview && <div className="preview-post-media"><img src={imagePreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>}
+                  <div className="preview-post-title">{title || 'Your headline appears here'}</div>
+                  <div className="preview-post-body">{body || 'Post details will show up here as you type.'}</div>
+                  {selectedCta && <div className="preview-post-cta">{selectedCta}</div>}
                 </div>
               </div>
 
-              <button className="btn btn-primary w-full">Save Settings</button>
+              <div className={`platform-mock${previewTab === 'instagram' ? ' show' : ''}`}>
+                <div className="ig-mock">
+                  <div className="ig-mock-head"><div className="ig-mock-avatar" /><div className="ig-mock-name">yourbusiness</div></div>
+                  {imagePreview && <div className="ig-mock-media"><img src={imagePreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>}
+                  {!imagePreview && <div className="ig-mock-media" />}
+                  <div className="ig-mock-icons">♡ 💬 ➤</div>
+                  <div className="ig-mock-caption"><b>yourbusiness</b> {body || 'Your caption will appear here.'}</div>
+                </div>
+              </div>
+
+              <div className={`platform-mock${previewTab === 'facebook' ? ' show' : ''}`}>
+                <div className="fb-mock">
+                  <div className="fb-mock-head"><div className="fb-mock-avatar" /><div><div className="fb-mock-name">Your Business</div><div className="fb-mock-time">Just now · 🌐</div></div></div>
+                  <div className="fb-mock-caption">{body || 'Your post will appear here.'}</div>
+                  {imagePreview && <div className="fb-mock-media"><img src={imagePreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>}
+                  {!imagePreview && <div className="fb-mock-media" />}
+                  <div className="fb-mock-icons"><span>👍 Like</span><span>💬 Comment</span><span>↪ Share</span></div>
+                </div>
+              </div>
+
+              <div className={`platform-mock${previewTab === 'tiktok' ? ' show' : ''}`}>
+                <div className="tiktok-phone-frame">
+                  <div className="tiktok-phone-notch" />
+                  <div className="tiktok-mock">
+                    {imagePreview && <div className="tiktok-mock-media"><img src={imagePreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>}
+                    {!imagePreview && <div className="tiktok-mock-media" />}
+                    <div className="tiktok-mock-side">
+                      <div className="tiktok-mock-icon">♥</div>
+                      <div className="tiktok-mock-icon">💬</div>
+                      <div className="tiktok-mock-icon">↪</div>
+                    </div>
+                    <div className="tiktok-mock-body">
+                      <div className="tiktok-mock-caption">{body || 'Your caption will appear here.'}</div>
+                      <div className="tiktok-mock-music"><span className="tiktok-mock-music-icon">♪</span><span>Upbeat Corporate</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        )}
-      </ToolLayout>
-    </ProtectedRoute>
+        </section>
+      </main>
+    </div>
   );
 }

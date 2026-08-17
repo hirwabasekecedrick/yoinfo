@@ -2,22 +2,52 @@
 
 import { useState, useRef, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import ToolLayout from '@/components/tool-layout';
+import Link from 'next/link';
 import ProtectedRoute from '@/components/protected-route';
 import { sendMessage, fetchCampaigns, fetchCampaign, resendCampaign, updateCampaignContacts, uploadAttachment } from '@/lib/api';
 import { API_URL } from '@/lib/config';
 
-const TOOL_NAV = [
-  { label: 'Update Wizard', href: '/poster/dashboard', icon: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z' },
-  { label: 'Blast Wizard', href: '/messaging', icon: 'M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.111.431-.173.869-.173 1.315 0 .447.062.884.173 1.315m0-9.665a24.301 24.301 0 003.484.045m-3.484 0a24.27 24.27 0 01-3.484-.045' },
-  { label: 'Invoice Wizard', href: '/invoices', icon: 'M9 7h6M9 11h6M9 15h3M6 3h9l3 3v15a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1z' },
-  { label: 'Business Profiling', href: '/business', icon: 'M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72l1.189-1.19A1.5 1.5 0 0113.5 9h1.5a1.5 1.5 0 011.5 1.5v8.25' },
-  { label: 'Fliiper', href: '/flipper', icon: 'M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15a2.25 2.25 0 012.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z' },
-];
-
 const CAMPAIGN_STEPS = ['Contacts', 'Channels', 'Message', 'Review'];
 
 type View = 'dashboard' | 'new-campaign' | 'campaigns' | 'contacts' | 'templates' | 'settings';
+
+const CAMPAIGNS_PER_PAGE = 5;
+
+function CampaignPagination({ totalPages, page, setPage }: { totalPages: number; page: number; setPage: (p: number) => void }) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+      <span className="text-xs text-gray-400">Page {page} of {totalPages}</span>
+      <div className="flex gap-1.5">
+        <button
+          onClick={() => setPage(Math.max(1, page - 1))}
+          disabled={page === 1}
+          className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        >
+          Prev
+        </button>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+          <button
+            key={p}
+            onClick={() => setPage(p)}
+            className={`w-8 h-8 text-xs font-semibold rounded-lg transition-colors ${
+              p === page ? 'bg-[#C1027D] text-white' : 'border border-gray-200 text-gray-500 hover:bg-gray-50'
+            }`}
+          >
+            {p}
+          </button>
+        ))}
+        <button
+          onClick={() => setPage(Math.min(totalPages, page + 1))}
+          disabled={page === totalPages}
+          className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function MessagingDashboard() {
   const [view, setView] = useState<View>('dashboard');
@@ -57,7 +87,6 @@ export default function MessagingDashboard() {
   const [campaigns, setCampaigns] = useState<{ id: string; name: string; status: string; recipients: number; channels: string[]; date: string }[]>([]);
   const [fullCampaigns, setFullCampaigns] = useState<any[]>([]);
   const [campaignsPage, setCampaignsPage] = useState(1);
-  const CAMPAIGNS_PER_PAGE = 5;
 
   // Contacts tab
   const [expandedCampaignId, setExpandedCampaignId] = useState<string | null>(null);
@@ -86,42 +115,6 @@ export default function MessagingDashboard() {
 
   const campaignsTotalPages = Math.max(1, Math.ceil(campaigns.length / CAMPAIGNS_PER_PAGE));
   const campaignsPageData = campaigns.slice((campaignsPage - 1) * CAMPAIGNS_PER_PAGE, campaignsPage * CAMPAIGNS_PER_PAGE);
-
-  const CampaignPagination = ({ totalPages, page, setPage }: { totalPages: number; page: number; setPage: (p: number) => void }) => {
-    if (totalPages <= 1) return null;
-    return (
-      <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-        <span className="text-xs text-gray-400">Page {page} of {totalPages}</span>
-        <div className="flex gap-1.5">
-          <button
-            onClick={() => setPage(Math.max(1, page - 1))}
-            disabled={page === 1}
-            className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            Prev
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-            <button
-              key={p}
-              onClick={() => setPage(p)}
-              className={`w-8 h-8 text-xs font-semibold rounded-lg transition-colors ${
-                p === page ? 'bg-[#C1027D] text-white' : 'border border-gray-200 text-gray-500 hover:bg-gray-50'
-              }`}
-            >
-              {p}
-            </button>
-          ))}
-          <button
-            onClick={() => setPage(Math.min(totalPages, page + 1))}
-            disabled={page === totalPages}
-            className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            Next
-          </button>
-        </div>
-      </div>
-    );
-  };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -340,43 +333,38 @@ export default function MessagingDashboard() {
 
   return (
     <ProtectedRoute>
-      <ToolLayout
-        title=""
-        subtitle=""
-        navItems={TOOL_NAV}
-      >
-        {/* ── Sidebar Nav for Views ──────────────────────── */}
-        <div className="flex gap-6">
-          <div className="w-48 flex-shrink-0 hidden lg:block">
-            <nav className="space-y-1">
-              {([
-                { id: 'dashboard' as View, label: 'Dashboard', icon: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6z' },
-                { id: 'new-campaign' as View, label: 'New Campaign', icon: 'M12 4.5v15m7.5-7.5h-15' },
-                { id: 'campaigns' as View, label: 'Campaigns', icon: 'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z' },
-                { id: 'contacts' as View, label: 'Contacts', icon: 'M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z' },
-                { id: 'templates' as View, label: 'Templates', icon: 'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z' },
-                { id: 'settings' as View, label: 'Settings', icon: 'M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z M15 12a3 3 0 11-6 0 3 3 0 016 0z' },
-              ]).map(item => (
-                <button
-                  key={item.id}
-                  onClick={() => { setView(item.id); if (item.id === 'new-campaign') { resetForm(); setStep(0); } if (item.id === 'campaigns') setCampaignsPage(1); }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    view === item.id
-                      ? 'bg-[#C1027D]/10 text-[#C1027D]'
-                      : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  <svg className="w-4.5 h-4.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
-                  </svg>
-                  {item.label}
-                </button>
-              ))}
-            </nav>
+      <div className="app">
+        <aside className="sidebar">
+          <div className="wizard-nav-row">
+            <Link href="/" className="wizard-nav-btn">← Back</Link>
+            <Link href="/" className="wizard-nav-btn">⌂ Home</Link>
+          </div>
+          <div className="brand">
+            <div className="brand-mark">R</div>
+            <div><div className="brand-name">Blast Wizard</div><div className="brand-sub">Email, SMS &amp; WhatsApp Marketing</div></div>
+          </div>
+          <nav>
+            {(['dashboard','campaigns','contacts','templates','settings'] as View[]).map(id => (
+              <div key={id} className={`nav-item${view === id ? ' active' : ''}`} onClick={() => { setView(id); if (id === 'new-campaign') { resetForm(); setStep(0); } if (id === 'campaigns') setCampaignsPage(1); }}>
+                <span className="nav-dot" /> {id.charAt(0).toUpperCase() + id.slice(1)}
+              </div>
+            ))}
+            <div className={`nav-item${view === 'new-campaign' ? ' active' : ''}`} onClick={() => { setView('new-campaign'); resetForm(); setStep(0); }}>
+              <span className="nav-dot" /> New Campaign
+            </div>
+          </nav>
+          <div className="sidebar-foot">Sends via WhatsApp, Email &amp; SMS from one list, one message. Pay as you go, in RWF.</div>
+        </aside>
+
+        <main>
+          <div className="topbar">
+            <div>
+              <h1>{view === 'new-campaign' ? 'New campaign' : view === 'campaigns' ? 'Campaigns' : view === 'contacts' ? 'Contacts' : view === 'templates' ? 'Templates' : view === 'settings' ? 'Settings' : 'Dashboard'}</h1>
+              <p>{view === 'new-campaign' ? 'Upload your contacts, pick your channels, write once — send everywhere.' : 'Email, SMS & WhatsApp Marketing'}</p>
+            </div>
           </div>
 
           {/* ── Main Content Area ─────────────────────────── */}
-          <div className="flex-1 min-w-0">
 
             {/* ═══ DASHBOARD ═══ */}
             {view === 'dashboard' && (
@@ -1241,25 +1229,20 @@ export default function MessagingDashboard() {
                 </div>
               </div>
             )}
-          </div>
+        </main>
+      </div>
+
+      {toast && (
+        <div className={`toast ${toast.type === 'success' ? 'success' : 'error'}`}>
+          {toast.message}
         </div>
+      )}
 
-        {/* ── Toast Notification ──────────────────────────── */}
-        {toast && (
-          <div className={`fixed bottom-24 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl shadow-lg font-semibold text-sm animate-fade-in-up z-50 ${
-            toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'
-          }`}>
-            {toast.message}
-          </div>
-        )}
-
-        {/* ── Success Toast ──────────────────────────────── */}
-        {sendSuccess && (
-          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#C1027D] text-white px-6 py-3 rounded-xl shadow-lg font-semibold text-sm animate-fade-in-up z-50">
-            {resendCampaignId ? 'Campaign resent successfully!' : 'Campaign sent successfully!'}
-          </div>
-        )}
-      </ToolLayout>
+      {sendSuccess && (
+        <div className="toast success">
+          {resendCampaignId ? 'Campaign resent successfully!' : 'Campaign sent successfully!'}
+        </div>
+      )}
     </ProtectedRoute>
   );
 }

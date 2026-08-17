@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import ToolLayout from '@/components/tool-layout';
+import Link from 'next/link';
 import ProtectedRoute from '@/components/protected-route';
 import { useIbiceri } from '@/components/ibiceri-provider';
 
@@ -13,10 +13,26 @@ const TOOL_NAV = [
   { label: 'Fliiper', href: '/flipper', icon: 'M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15a2.25 2.25 0 012.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z' },
 ];
 
-type View = 'dashboard' | 'invoices' | 'new-invoice' | 'invoice-preview' | 'templates' | 'integrations';
+type View = 'dashboard' | 'sales' | 'stock' | 'invoices' | 'new-invoice' | 'invoice-preview' | 'tax' | 'templates' | 'integrations';
 
 interface LineItem { id: number; desc: string; qty: number; price: number; }
 interface Invoice { num: string; client: string; amount: number; status: string; ebm: string; due: string; }
+interface StockItem { name: string; qty: number; price: number; }
+interface Sale { date: string; item: string; qty: number; payment: string; total: number; }
+
+const SEED_STOCK: StockItem[] = [
+  { name: 'Cooking oil 1L', qty: 34, price: 2500 },
+  { name: 'Rice 5kg bag', qty: 6, price: 6500 },
+  { name: 'Bar soap (pack of 3)', qty: 2, price: 1800 },
+  { name: 'Sugar 1kg', qty: 48, price: 1400 },
+  { name: 'Bottled water 500ml (crate)', qty: 15, price: 9000 },
+];
+
+const SEED_SALES: Sale[] = [
+  { date: '12 Aug 2026', item: 'Cooking oil 1L', qty: 3, payment: 'Cash', total: 7500 },
+  { date: '12 Aug 2026', item: 'Rice 5kg bag', qty: 2, payment: 'Mobile Money', total: 13000 },
+  { date: '11 Aug 2026', item: 'Sugar 1kg', qty: 10, payment: 'Cash', total: 14000 },
+];
 
 const SEED_INVOICES: Invoice[] = [
   { num: 'INV-2026-0001', client: 'Golden Bakery Ltd', amount: 1180000, status: 'Paid', ebm: 'Synced', due: '02 Jul 2026' },
@@ -57,6 +73,16 @@ export default function InvoicesPage() {
   const sigInputRef = useRef<HTMLInputElement>(null);
 
   const [toast, setToast] = useState<string | null>(null);
+
+  const [stock, setStock] = useState<StockItem[]>(SEED_STOCK);
+  const [sales, setSales] = useState<Sale[]>(SEED_SALES);
+  const [saleItemIdx, setSaleItemIdx] = useState(0);
+  const [saleQty, setSaleQty] = useState(1);
+  const [salePayment, setSalePayment] = useState('Cash');
+  const [stockName, setStockName] = useState('');
+  const [stockQty, setStockQty] = useState(0);
+  const [stockPrice, setStockPrice] = useState(0);
+  const [taxReconciled, setTaxReconciled] = useState(false);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -120,6 +146,49 @@ export default function InvoicesPage() {
     reader.readAsDataURL(file);
   };
 
+  const recordSale = () => {
+    if (stock.length === 0) { showToast('Add a stock item first'); return; }
+    const item = stock[saleItemIdx];
+    if (!item) return;
+    const qty = Math.max(1, saleQty);
+    if (qty > item.qty) { showToast(`Only ${item.qty} ${item.name} in stock`); return; }
+    const total = item.price * qty;
+    const newStock = [...stock];
+    newStock[saleItemIdx] = { ...item, qty: item.qty - qty };
+    setStock(newStock);
+    const date = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    setSales(prev => [{ date, item: item.name, qty, payment: salePayment, total }, ...prev]);
+    showToast(`Sale recorded: ${qty} × ${item.name} — RWF ${total.toLocaleString()}`);
+    setSaleQty(1);
+  };
+
+  const addStockItem = () => {
+    if (!stockName.trim()) { showToast('Give the item a name'); return; }
+    setStock(prev => [...prev, { name: stockName.trim(), qty: stockQty, price: stockPrice }]);
+    setStockName(''); setStockQty(0); setStockPrice(0);
+    showToast(stockName.trim() + ' added to stock');
+  };
+
+  const adjustStock = (idx: number, delta: number) => {
+    setStock(prev => prev.map((s, i) => i === idx ? { ...s, qty: Math.max(0, s.qty + delta) } : s));
+  };
+
+  const salePreview = () => {
+    if (stock.length === 0 || saleItemIdx >= stock.length) return '';
+    const item = stock[saleItemIdx];
+    const qty = Math.max(1, saleQty);
+    const total = item.price * qty;
+    return `${item.name}: RWF ${item.price.toLocaleString()} × ${qty} = RWF ${total.toLocaleString()} · ${item.qty} in stock`;
+  };
+
+  const LOW_STOCK_THRESHOLD = 5;
+  const lowStockCount = stock.filter(s => s.qty <= LOW_STOCK_THRESHOLD).length;
+
+  const taxSales = sales.reduce((s, sale) => s + sale.total, 0);
+  const taxVat = Math.round(taxSales * 0.18);
+  const taxExpenses = 320000;
+  const taxDue = Math.max(0, Math.round(taxSales * 0.18 * 0.27));
+
   const filteredInvoices = invoices.filter(inv =>
     (filterStatus === 'all' || inv.status === filterStatus) &&
     (search === '' || inv.client.toLowerCase().includes(search.toLowerCase()) || inv.num.toLowerCase().includes(search.toLowerCase()))
@@ -144,36 +213,77 @@ export default function InvoicesPage() {
   const { subtotal, vat, total } = calcTotals();
   const initials = (tplName || 'Your Business').trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || 'YB';
 
+  const INV_SIDEBAR = [
+    { view: 'dashboard' as View, label: 'Dashboard' },
+    { view: 'sales' as View, label: 'Sales' },
+    { view: 'stock' as View, label: 'Stock' },
+    { view: 'invoices' as View, label: 'Invoices' },
+    { view: 'tax' as View, label: 'Tax' },
+    { view: 'templates' as View, label: 'Templates' },
+    { view: 'integrations' as View, label: 'Integrations' },
+  ];
+
+  const viewTitle = (
+    view === 'dashboard' ? 'Dashboard' :
+    view === 'sales' ? 'Sales' :
+    view === 'stock' ? 'Stock' :
+    view === 'invoices' ? 'Invoices' :
+    view === 'new-invoice' ? 'New Invoice' :
+    view === 'invoice-preview' ? 'Preview & Print' :
+    view === 'tax' ? 'Tax' :
+    view === 'templates' ? 'Templates' : 'Integrations'
+  );
+  const viewSub = (
+    view === 'dashboard' ? 'Stock, sales, invoices, and tax — everything in one place.' :
+    view === 'sales' ? 'Record every sale from your phone.' :
+    view === 'stock' ? 'Track inventory levels and get low-stock alerts.' :
+    view === 'invoices' ? 'Track every invoice from draft to paid.' :
+    view === 'new-invoice' ? 'RRA/EBM-compliant, numbered automatically.' :
+    view === 'invoice-preview' ? 'Review the invoice exactly as your client will see it.' :
+    view === 'tax' ? 'Monthly tax reconciliation powered by EBM data.' :
+    view === 'templates' ? 'Add your logo, address, and colours once — reuse them on every invoice.' :
+    'Connect MSME Biz Wizard to your EBM device and accounting software.'
+  );
+
+  const goHome = () => { window.location.href = '/'; };
+
   return (
     <ProtectedRoute>
-      <ToolLayout
-        title={
-          view === 'dashboard' ? 'Dashboard' :
-          view === 'invoices' ? 'Invoices' :
-          view === 'new-invoice' ? 'New Invoice' :
-          view === 'invoice-preview' ? 'Preview & Print' :
-          view === 'templates' ? 'Templates' : 'Integrations'
-        }
-        subtitle={
-          view === 'dashboard' ? 'Every invoice, receipt, and EBM submission in one place.' :
-          view === 'invoices' ? 'Track every invoice from draft to paid.' :
-          view === 'new-invoice' ? 'RRA/EBM-compliant, numbered automatically.' :
-          view === 'invoice-preview' ? 'Review the invoice exactly as your client will see it.' :
-          view === 'templates' ? 'Add your logo, address, and colours once — reuse them on every invoice.' :
-          'Connect Invoice Wizard to your EBM device and accounting software.'
-        }
-        navItems={TOOL_NAV}
-      >
-        <div className="flex gap-2 mb-6 flex-wrap">
-          {(['dashboard', 'invoices', 'new-invoice', 'templates', 'integrations'] as View[]).map(v => (
-            <button key={v} onClick={() => setView(v)}
-              className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-colors ${
-                view === v ? 'bg-[#C1027D] text-white border-[#C1027D]' : 'bg-white text-gray-500 border-[#f0e4ec] hover:border-[#D93F9E]'
-              }`}>
-              {v === 'new-invoice' ? '+ New Invoice' : v.charAt(0).toUpperCase() + v.slice(1).replace('-', ' ')}
-            </button>
-          ))}
-        </div>
+      <div className="app">
+        <aside className="sidebar">
+          <div className="wizard-nav-row">
+            <div className="wizard-nav-btn" onClick={goHome}>← Back</div>
+            <div className="wizard-nav-btn" onClick={goHome}>⌂ Home</div>
+          </div>
+          <div className="brand">
+            <div className="brand-mark">MW</div>
+            <div>
+              <div className="brand-name">MSME Biz Wizard</div>
+              <div className="brand-sub">Simple ERP for small business</div>
+            </div>
+          </div>
+          <nav>
+            {INV_SIDEBAR.map(item => (
+              <div key={item.view}
+                className={`tool-nav-item ${view === item.view ? 'active' : ''}`}
+                onClick={() => setView(item.view)}>
+                <span className="nav-dot" />
+                {item.label}
+              </div>
+            ))}
+          </nav>
+          <div className="sidebar-foot">Stock, sales, EBM invoices, and tax — everything a small business needs, on your phone.</div>
+        </aside>
+
+        <main>
+          <div className="topbar">
+            <div>
+              <h1>{viewTitle}</h1>
+              <p>{viewSub}</p>
+            </div>
+          </div>
+
+          <div className="content">
 
         {/* ═══════════════ DASHBOARD ═══════════════ */}
         {view === 'dashboard' && (
@@ -182,11 +292,29 @@ export default function InvoicesPage() {
               <div className="stat-card"><div className="stat-icon bg-[#FBEAF5] text-[#C1027D]">💰</div><div><div className="stat-value">RWF {activeCounts.total.toLocaleString()}</div><div className="stat-label">Invoiced this month</div></div></div>
               <div className="stat-card"><div className="stat-icon bg-[#FDF3E3] text-[#C98A1B]">⏳</div><div><div className="stat-value">RWF {activeCounts.outstanding.toLocaleString()}</div><div className="stat-label">Outstanding</div></div></div>
               <div className="stat-card"><div className="stat-icon bg-[#EFFAF0] text-green-600">✅</div><div><div className="stat-value">RWF {activeCounts.paid.toLocaleString()}</div><div className="stat-label">Paid</div></div></div>
-              <div className="stat-card"><div className="stat-icon bg-[#EFFAF0] text-green-600">📡</div><div><div className="stat-value">{activeCounts.ebm}</div><div className="stat-label">EBM synced</div></div></div>
+              <div className="stat-card"><div className="stat-icon bg-[#FDF3E3] text-[#C98A1B]">⚠️</div><div><div className="stat-value">{lowStockCount}</div><div className="stat-label">Low stock items</div></div></div>
             </div>
             <div className="flex gap-3 mb-6 flex-wrap">
-              <button className="btn btn-primary" onClick={() => setView('new-invoice')}>+ New Invoice</button>
-              <button className="btn btn-outline" onClick={() => setView('templates')}>Manage Templates</button>
+              <button className="btn btn-primary" onClick={() => setView('sales')}>+ Record Sale</button>
+              <button className="btn btn-outline" onClick={() => setView('stock')}>Manage Stock</button>
+              <button className="btn btn-outline" onClick={() => setView('new-invoice')}>+ New Invoice</button>
+            </div>
+            <div className="card mb-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold">Recent sales</h3>
+                <button className="text-xs font-bold text-[#C1027D]" onClick={() => setView('sales')}>View all →</button>
+              </div>
+              {sales.length === 0 ? (
+                <div className="text-center py-4 text-gray-400 text-sm">No sales yet — record your first one.</div>
+              ) : sales.slice(0, 4).map((s, i) => (
+                <div key={i} className="list-row">
+                  <div>
+                    <div className="font-bold text-sm">{s.qty} × {s.item}</div>
+                    <div className="text-xs text-gray-400">{s.date} · {s.payment}</div>
+                  </div>
+                  <span className="font-mono font-bold text-sm">RWF {s.total.toLocaleString()}</span>
+                </div>
+              ))}
             </div>
             <div className="card">
               <div className="flex items-center justify-between mb-4">
@@ -205,6 +333,96 @@ export default function InvoicesPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          </>
+        )}
+
+        {/* ═══════════════ SALES ═══════════════ */}
+        {view === 'sales' && (
+          <>
+            <div className="card mb-5">
+              <h3 className="font-bold mb-4">Record a sale</h3>
+              <div className="grid grid-cols-[1.4fr_0.6fr_0.8fr_auto] gap-2 items-end">
+                <div className="field-group">
+                  <label className="field-label">Item</label>
+                  <select className="input" value={saleItemIdx} onChange={e => setSaleItemIdx(parseInt(e.target.value))}>
+                    {stock.map((s, i) => <option key={i} value={i}>{s.name}</option>)}
+                  </select>
+                </div>
+                <div className="field-group">
+                  <label className="field-label">Qty</label>
+                  <input type="number" className="input" value={saleQty} min={1} onChange={e => setSaleQty(parseInt(e.target.value) || 1)} />
+                </div>
+                <div className="field-group">
+                  <label className="field-label">Payment</label>
+                  <select className="input" value={salePayment} onChange={e => setSalePayment(e.target.value)}>
+                    <option>Cash</option><option>Mobile Money</option><option>Card</option>
+                  </select>
+                </div>
+                <button className="btn btn-primary" onClick={recordSale}>+ Add Sale</button>
+              </div>
+              <div className="text-xs font-semibold text-gray-400 mt-2">{salePreview() || 'Select an item to see price and stock on hand.'}</div>
+            </div>
+            <div className="card">
+              <table className="w-full">
+                <thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Payment</th><th>Total</th></tr></thead>
+                <tbody>
+                  {sales.length === 0 ? (
+                    <tr><td colSpan={5} className="text-center text-gray-400 py-8">No sales recorded yet.</td></tr>
+                  ) : sales.map((s, i) => (
+                    <tr key={i}><td>{s.date}</td><td>{s.item}</td><td>{s.qty}</td><td>{s.payment}</td><td className="font-mono">RWF {s.total.toLocaleString()}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {/* ═══════════════ STOCK ═══════════════ */}
+        {view === 'stock' && (
+          <>
+            <div className="card mb-5">
+              <h3 className="font-bold mb-4">Add a stock item</h3>
+              <div className="grid grid-cols-[1.4fr_0.7fr_0.7fr_auto] gap-2 items-end">
+                <div className="field-group">
+                  <label className="field-label">Item name</label>
+                  <input type="text" className="input" value={stockName} onChange={e => setStockName(e.target.value)} placeholder="e.g. Cooking oil 1L" />
+                </div>
+                <div className="field-group">
+                  <label className="field-label">Qty on hand</label>
+                  <input type="number" className="input" value={stockQty} min={0} onChange={e => setStockQty(parseInt(e.target.value) || 0)} />
+                </div>
+                <div className="field-group">
+                  <label className="field-label">Unit price (RWF)</label>
+                  <input type="number" className="input" value={stockPrice || ''} placeholder="2500" onChange={e => setStockPrice(parseInt(e.target.value) || 0)} />
+                </div>
+                <button className="btn btn-primary" onClick={addStockItem}>+ Add Item</button>
+              </div>
+            </div>
+            <div className="card">
+              <table className="w-full">
+                <thead><tr><th>Item</th><th>Qty on hand</th><th>Unit price</th><th>Value</th><th></th></tr></thead>
+                <tbody>
+                  {stock.length === 0 ? (
+                    <tr><td colSpan={5} className="text-center text-gray-400 py-8">No stock items yet.</td></tr>
+                  ) : stock.map((s, i) => (
+                    <tr key={i}>
+                      <td className="font-semibold text-sm">{s.name}</td>
+                      <td>
+                        <span className={s.qty <= LOW_STOCK_THRESHOLD ? 'text-red-600 font-bold' : ''}>
+                          {s.qty}{s.qty <= LOW_STOCK_THRESHOLD ? ' ⚠' : ''}
+                        </span>
+                      </td>
+                      <td className="font-mono">RWF {s.price.toLocaleString()}</td>
+                      <td className="font-mono">RWF {(s.qty * s.price).toLocaleString()}</td>
+                      <td className="flex gap-1">
+                        <button className="iw-line-remove" onClick={() => adjustStock(i, -1)}>−</button>
+                        <button className="iw-line-remove" onClick={() => adjustStock(i, 1)}>+</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </>
         )}
@@ -248,9 +466,43 @@ export default function InvoicesPage() {
           </>
         )}
 
+        {/* ═══════════════ TAX ═══════════════ */}
+        {view === 'tax' && (
+          <>
+            <div className="grid grid-cols-3 gap-4 mb-5">
+              <div className="stat-cell"><div className="num font-bold text-lg">RWF {taxSales.toLocaleString()}</div><div className="lbl text-xs text-gray-400">Sales this month</div></div>
+              <div className="stat-cell"><div className="num font-bold text-lg">RWF {taxVat.toLocaleString()}</div><div className="lbl text-xs text-gray-400">VAT collected (18%)</div></div>
+              <div className="stat-cell"><div className="num font-bold text-lg">RWF {taxDue.toLocaleString()}</div><div className="lbl text-xs text-gray-400">Estimated tax due</div></div>
+            </div>
+            <div className="card mb-4">
+              <h3 className="font-bold mb-3">This period</h3>
+              <div className="list-row"><span>Total sales recorded</span><span className="font-mono">RWF {taxSales.toLocaleString()}</span></div>
+              <div className="list-row"><span>VAT collected (18%)</span><span className="font-mono">RWF {taxVat.toLocaleString()}</span></div>
+              <div className="list-row"><span>Deductible business expenses</span><span className="font-mono">RWF {taxExpenses.toLocaleString()}</span></div>
+              <div className="list-row font-bold"><span>Estimated tax due to RRA</span><span className="font-mono">RWF {taxDue.toLocaleString()}</span></div>
+            </div>
+            <div className="card">
+              <h3 className="font-bold mb-3">Reconciliation status</h3>
+              <div className="list-row">
+                <div>
+                  <div className="font-bold text-sm">August 2026</div>
+                  <div className="text-xs text-gray-400">Based on sales, invoices &amp; EBM submissions</div>
+                </div>
+                <span className={`badge ${taxReconciled ? 'success' : 'warning'}`}>{taxReconciled ? 'Reconciled' : 'Not yet reconciled'}</span>
+              </div>
+              <button className="btn btn-primary mt-3" onClick={() => { setTaxReconciled(true); showToast('August marked as reconciled'); }}>
+                {taxReconciled ? 'Reconciled ✓' : 'Mark August as Reconciled'}
+              </button>
+              <p className="text-xs text-gray-400 mt-2">This is an estimate to help you prepare. Always confirm final figures with RRA or your accountant before filing.</p>
+            </div>
+          </>
+        )}
+
         {/* ═══════════════ NEW INVOICE ═══════════════ */}
         {view === 'new-invoice' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <>
+          <div className="mbreadcrumb"><button className="text-[#C1027D] font-bold" onClick={() => setView('invoices')}>Invoices</button> / <span>{issuedNum || 'New Invoice'}</span></div>
+          <div className="detail-grid">
             <div>
               <div className="card">
                 <h3 className="font-bold mb-4">Bill to</h3>
@@ -300,6 +552,7 @@ export default function InvoicesPage() {
               </div>
             </div>
           </div>
+          </>
         )}
 
         {/* ═══════════════ PREVIEW ═══════════════ */}
@@ -497,13 +750,14 @@ export default function InvoicesPage() {
           </>
         )}
 
-        {/* ── Toast ──────────────────────────────── */}
-        {toast && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#3D0231] text-white font-bold px-5 py-3 rounded-xl shadow-lg z-50 animate-fade-in-up">
-            {toast}
           </div>
-        )}
-      </ToolLayout>
+
+          {/* ── Toast ──────────────────────────────── */}
+          {toast && (
+            <div className="toast">{toast}</div>
+          )}
+        </main>
+      </div>
     </ProtectedRoute>
   );
 }

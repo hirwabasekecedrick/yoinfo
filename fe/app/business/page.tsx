@@ -1,206 +1,156 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { fetchBusinesses, createBusiness, deleteBusiness } from '@/lib/api';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import BusinessProfileForm from '@/components/business-profile-form';
-import ToolLayout from '@/components/tool-layout';
 import ProtectedRoute from '@/components/protected-route';
 
-const TOOL_NAV = [
-  { label: 'Update Wizard', href: '/poster/dashboard', icon: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z' },
-  { label: 'Blast Wizard', href: '/messaging', icon: 'M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.111.431-.173.869-.173 1.315 0 .447.062.884.173 1.315m0-9.665a24.301 24.301 0 003.484.045m-3.484 0a24.27 24.27 0 01-3.484-.045' },
-  { label: 'Invoice Wizard', href: '/invoices', icon: 'M9 7h6M9 11h6M9 15h3M6 3h9l3 3v15a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1z' },
-  { label: 'Business Profiling', href: '/business', icon: 'M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72l1.189-1.19A1.5 1.5 0 0113.5 9h1.5a1.5 1.5 0 011.5 1.5v8.25' },
-  { label: 'Fliiper', href: '/flipper', icon: 'M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15a2.25 2.25 0 012.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z' },
-];
+const BIZ_CATS = ['All', 'Hospitality', 'Retail', 'Cooperatives', 'Services'];
 
-const CATEGORIES = ['All', 'Technology', 'Healthcare', 'Finance', 'Education', 'Hospitality', 'Manufacturing', 'Agriculture', 'Construction', 'Professional Services', 'Retail'];
+const BIZ_LISTINGS = [
+  { cat: 'Hospitality', title: 'Karisimbi Lodge & Retreat', desc: 'Boutique lodge with mountain views, guided hikes, and a farm-to-table restaurant.', rating: '4.8', loc: 'Musanze', media: 'b' },
+  { cat: 'Cooperatives', title: 'Abahuzamugambi Coffee Co-op', desc: 'Farmer-owned cooperative producing specialty washed Arabica for export and local roasters.', rating: '4.9', loc: 'Huye', media: 'c' },
+  { cat: 'Services', title: 'Karisimbi Development Group', desc: 'Real estate developer delivering mixed-use residential and retail projects across Kigali.', rating: '4.6', loc: 'Kigali', media: 'd' },
+  { cat: 'Retail', title: 'Isoko Handmade Crafts', desc: 'Artisan cooperative selling woven baskets, jewelry, and home decor made in Rwanda.', rating: '4.7', loc: 'Kigali', media: 'a' },
+  { cat: 'Hospitality', title: 'Lake Kivu Eco-Lodge', desc: 'Solar-powered lakeside retreat offering kayaking, birdwatching, and wellness retreats.', rating: '4.9', loc: 'Rubavu', media: 'b' },
+  { cat: 'Cooperatives', title: 'Virunga Farmers Alliance', desc: 'Aggregating produce from 12 cooperatives to supply hotels and restaurants in the Northern Province.', rating: '4.5', loc: 'Musanze', media: 'c' },
+];
 
 export default function BusinessPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#FBF6F9] flex items-center justify-center"><div className="animate-pulse text-gray-400">Loading...</div></div>}>
-      <BusinessPageContent />
-    </Suspense>
+    <ProtectedRoute>
+      <BusinessContent />
+    </ProtectedRoute>
   );
 }
 
-function BusinessPageContent() {
-  const searchParams = useSearchParams();
-  const [businesses, setBusinesses] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
+function BusinessContent() {
+  const [view, setView] = useState<'list' | 'detail'>('list');
+  const [activeCat, setActiveCat] = useState('All');
+  const [query, setQuery] = useState('');
+  const [selected, setSelected] = useState<typeof BIZ_LISTINGS[number] | null>(null);
   const [user, setUser] = useState<any>(null);
-  const [selectedBusiness, setSelectedBusiness] = useState<string | null>(null);
-  const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [search, setSearch] = useState(searchParams.get('search') || '');
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'All');
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) setUser(JSON.parse(storedUser));
   }, []);
 
-  useEffect(() => {
-    setLoading(true);
-    fetchBusinesses({ category: selectedCategory, search: search || undefined })
-      .then(setBusinesses)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [search, selectedCategory]);
+  const filtered = BIZ_LISTINGS.filter(b =>
+    (activeCat === 'All' || b.cat === activeCat) &&
+    (query === '' || b.title.toLowerCase().includes(query.toLowerCase()))
+  );
 
-  const [searchInput, setSearchInput] = useState(search);
-  useEffect(() => {
-    const timer = setTimeout(() => setSearch(searchInput), 300);
-    return () => clearTimeout(timer);
-  }, [searchInput]);
-
-  const handleSaveProfile = async (data: any) => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    try {
-      const newBusiness = await createBusiness(token, data);
-      setBusinesses(prev => [newBusiness, ...prev]);
-      setShowForm(false);
-      setSubmitMessage({ type: 'success', text: 'Business profile created!' });
-      setTimeout(() => setSubmitMessage(null), 4000);
-    } catch (err: any) {
-      setSubmitMessage({ type: 'error', text: err.message || 'Failed to create business profile' });
-    }
+  const openDetail = (b: typeof BIZ_LISTINGS[number]) => {
+    setSelected(b);
+    setView('detail');
   };
-
-  const handleDeleteBusiness = async (id: string) => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    try {
-      await deleteBusiness(token, id);
-      setBusinesses(prev => prev.filter(b => b.id !== id));
-    } catch (err) { console.error(err); }
-  };
-
-  const selectedBiz = selectedBusiness ? businesses.find(b => b.id === selectedBusiness) : null;
 
   return (
-    <ProtectedRoute>
-      <ToolLayout title="" subtitle="" navItems={TOOL_NAV}>
-        <div className="flex gap-6">
-          {/* Filters Sidebar */}
-          <div className="w-64 flex-shrink-0 hidden lg:block">
-            <div className="space-y-6">
-              <div>
-                <div className="section-heading">Search</div>
-                <input type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)} placeholder="Search businesses..." className="input" />
-              </div>
-              <div>
-                <div className="section-heading">Categories</div>
-                <div className="flex flex-wrap gap-2">
-                  {CATEGORIES.map(cat => (
-                    <button key={cat} onClick={() => setSelectedCategory(cat)} className={`chip ${selectedCategory === cat ? 'active' : ''}`}>{cat}</button>
-                  ))}
-                </div>
-              </div>
-              {user && (
-                <button onClick={() => setShowForm(!showForm)} className="btn btn-primary w-full">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                  </svg>
-                  {showForm ? 'Close Form' : 'Profile Your Business'}
-                </button>
-              )}
-            </div>
+    <section className="section">
+      <div className="wrap">
+        <div className="topbar">
+          <div>
+            <h1>{view === 'list' ? 'Business Directory' : 'Business Profile'}</h1>
+            <p>{view === 'list' ? 'Browse profiles, services, and reviews.' : 'Services, team, hours, and testimonials.'}</p>
           </div>
-
-          {/* Main Content */}
-          <div className="flex-1 min-w-0">
-            {submitMessage && (
-              <div className={`mb-4 flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold ${
-                submitMessage.type === 'success' ? 'bg-[#D93F9E]/5 border border-[#D93F9E]/20 text-[#C1027D]' : 'bg-red-50 border border-red-200 text-red-700'
-              }`}>{submitMessage.text}</div>
-            )}
-
-            {showForm && user && (
-              <div className="mb-6 animate-fade-in-up">
-                <BusinessProfileForm onSave={handleSaveProfile} onCancel={() => setShowForm(false)} />
-              </div>
-            )}
-
-            {/* Business Grid + Detail */}
-            <div className="flex gap-6">
-              <div className={`flex-1 min-w-0 ${selectedBiz ? 'lg:w-1/2' : ''}`}>
-                {loading ? (
-                  <div className={`grid gap-6 ${selectedBiz ? 'sm:grid-cols-1' : 'sm:grid-cols-2 xl:grid-cols-3'}`}>
-                    {[1, 2, 3].map(i => <div key={i} className="card animate-pulse"><div className="h-36 bg-[#FBEAF5] rounded-xl mb-4" /><div className="h-5 w-2/3 bg-[#FBEAF5] rounded mb-2" /></div>)}
-                  </div>
-                ) : businesses.length === 0 ? (
-                  <div className="card text-center py-12">
-                    <div className="w-16 h-16 rounded-full bg-[#FBEAF5] flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-[#E97BC4]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                      </svg>
-                    </div>
-                    <h3 className="font-bold text-gray-900 mb-1">No businesses found</h3>
-                    <p className="text-sm text-gray-400">Try adjusting your search or category filter</p>
-                  </div>
-                ) : (
-                  <div className={`grid gap-6 ${selectedBiz ? 'sm:grid-cols-1' : 'sm:grid-cols-2 xl:grid-cols-3'}`}>
-                    {businesses.map((biz) => (
-                      <div key={biz.id} className="card cursor-pointer hover:shadow-lg hover:border-[#F8CEE9] transition-all duration-300 group relative" onClick={() => setSelectedBusiness(selectedBusiness === biz.id ? null : biz.id)}>
-                        <div className="flex items-start gap-3 mb-3">
-                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#C1027D] to-[#8A0260] flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                            {biz.name?.[0]?.toUpperCase()}
-                          </div>
-                          <div className="min-w-0">
-                            <h3 className="font-bold text-gray-900 truncate">{biz.name}</h3>
-                            <p className="text-xs text-gray-400">{[biz.city, biz.country].filter(Boolean).join(', ') || 'Location not set'}</p>
-                          </div>
-                        </div>
-                        <p className="text-xs text-gray-500 line-clamp-2 mb-3">{biz.description || biz.tagline || 'No description available.'}</p>
-                        {user && (biz.authorId === user.id || user.role === 'ADMIN') && (
-                          <button onClick={(e) => { e.stopPropagation(); handleDeleteBusiness(biz.id); }} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-red-500/90 text-white flex items-center justify-center hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Detail Sidebar */}
-              {selectedBiz && (
-                <div className="hidden lg:block w-96 flex-shrink-0">
-                  <div className="sticky top-20 card animate-slide-in-right">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="font-bold text-lg text-gray-900">{selectedBiz.name}</h2>
-                      <button onClick={() => setSelectedBusiness(null)} className="text-gray-400 hover:text-gray-600">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                      </button>
-                    </div>
-                    <p className="text-xs text-gray-400 mb-3">{[selectedBiz.city, selectedBiz.country].filter(Boolean).join(', ') || 'Location not set'}</p>
-                    <p className="text-sm text-gray-500 leading-relaxed mb-4">{selectedBiz.description || selectedBiz.tagline || 'No description available.'}</p>
-                    {selectedBiz.services?.length > 0 && (
-                      <div className="mb-4">
-                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Services</div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {selectedBiz.services.map((s: string) => (
-                            <span key={s} className="px-2.5 py-1 rounded-lg bg-[#FBEAF5] text-xs font-semibold text-[#C1027D]">{s}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    <div className="space-y-2 mb-4">
-                      {selectedBiz.phone && <div className="text-sm text-gray-600">📞 {selectedBiz.phone}</div>}
-                      {selectedBiz.email && <div className="text-sm text-gray-600">✉️ {selectedBiz.email}</div>}
-                      {selectedBiz.website && <div className="text-sm text-gray-600">🌐 {selectedBiz.website}</div>}
-                    </div>
-                    <button className="btn btn-primary w-full">Visit Website</button>
-                  </div>
-                </div>
-              )}
+          {user && (
+            <div>
+              <button className="btn-solid" onClick={() => setShowForm(!showForm)}>
+                {showForm ? 'Close Form' : 'Profile Your Business'}
+              </button>
             </div>
-          </div>
+          )}
         </div>
-      </ToolLayout>
-    </ProtectedRoute>
+
+        {showForm && user && (
+          <div style={{ marginBottom: 24 }}>
+            <BusinessProfileForm onSave={() => setShowForm(false)} onCancel={() => setShowForm(false)} />
+          </div>
+        )}
+
+        {view === 'list' ? (
+          <>
+            <div className="filter-bar">
+              {BIZ_CATS.map(c => (
+                <div key={c} className={`filter-chip${activeCat === c ? ' active' : ''}`} onClick={() => setActiveCat(c)}>{c}</div>
+              ))}
+              <div className="search-input" style={{ marginLeft: 'auto', maxWidth: 220 }}>
+                <input type="text" placeholder="Search businesses…" value={query} onChange={e => setQuery(e.target.value)} />
+              </div>
+            </div>
+            <div className="listing-grid" style={{ marginTop: 20 }}>
+              {filtered.map((b, i) => (
+                <div key={i} className="listing-card" onClick={() => openDetail(b)}>
+                  <div className={`listing-media ${b.media}`}><span className="listing-tag">{b.cat}</span></div>
+                  <div className="listing-body">
+                    <div className="listing-title">{b.title}</div>
+                    <div className="listing-desc">{b.desc}</div>
+                    <div className="listing-meta"><span className="listing-price">★ {b.rating}</span><span className="listing-loc">{b.loc}</span></div>
+                  </div>
+                </div>
+              ))}
+              {filtered.length === 0 && (
+                <div style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--muted)', padding: '60px 0' }}>
+                  No matching businesses. Try a different category or search term.
+                </div>
+              )}
+            </div>
+            <div className="final-cta" style={{ background: '#FAF3F8', color: 'var(--ink)', textAlign: 'center', marginTop: 40, border: '1px solid var(--line)' }}>
+              <h2 style={{ color: 'var(--ink)' }}>Don&apos;t see your business?</h2>
+              <p style={{ color: 'var(--muted)' }}>Claim your free profile and start reaching investors and customers today.</p>
+              <Link href="/auth" className="btn-solid btn-lg">Create Business Profile</Link>
+            </div>
+          </>
+        ) : selected && (
+          <>
+            <div className="mbreadcrumb"><a onClick={() => setView('list')}>Business Directory</a> / {selected.cat}</div>
+            <h1 className="mpage-title" style={{ fontSize: 24, margin: '14px 0 4px' }}>{selected.title}</h1>
+            <p className="mpage-sub" style={{ marginBottom: 18 }}>{selected.desc} ★ {selected.rating} · {selected.loc}, Rwanda</p>
+            <div className="detail-grid">
+              <div>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 8, marginBottom: 24 }}>
+                  <div className={`listing-media ${selected.media}`} style={{ height: 200, borderRadius: 12, gridRow: 'span 2' }} />
+                  <div className={`listing-media ${selected.media === 'b' ? 'c' : 'b'}`} style={{ height: 96, borderRadius: 12 }} />
+                  <div className={`listing-media ${selected.media === 'b' ? 'd' : 'a'}`} style={{ height: 96, borderRadius: 12 }} />
+                  <div className={`listing-media ${selected.media === 'b' ? 'a' : 'd'}`} style={{ height: 96, borderRadius: 12 }} />
+                  <div className={`listing-media ${selected.media}`} style={{ height: 96, borderRadius: 12 }} />
+                </div>
+                <div className="sub-h">About</div>
+                <p style={{ color: 'var(--muted)', fontSize: 13, fontWeight: 500, lineHeight: 1.7 }}>{selected.desc} We pride ourselves on quality service and customer satisfaction.</p>
+                <div className="sub-h">Services</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  <span className="badge" style={{ background: '#FAF3F8', color: 'var(--muted)' }}>Customer service</span>
+                  <span className="badge" style={{ background: '#FAF3F8', color: 'var(--muted)' }}>Consultation</span>
+                  <span className="badge" style={{ background: '#FAF3F8', color: 'var(--muted)' }}>{selected.cat}</span>
+                </div>
+                <div className="sub-h">Team</div>
+                <div className="list-row">
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <div className="avatar-sq" />
+                    <div><div style={{ fontWeight: 700, fontSize: 13.5 }}>Manager</div><div style={{ fontSize: 11.5, color: 'var(--muted)', fontWeight: 600 }}>General Manager</div></div>
+                  </div>
+                </div>
+                <div className="sub-h">Testimonials</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <div className="testimonial-box">&quot;Excellent service and friendly staff.&quot;<div className="who">— Grace T., Kigali</div></div>
+                  <div className="testimonial-box">&quot;Highly recommend for anyone visiting the area.&quot;<div className="who">— Daniel O., Nairobi</div></div>
+                </div>
+              </div>
+              <div>
+                <div className="card" style={{ position: 'sticky', top: 90 }}>
+                  <div style={{ fontSize: 10.5, color: 'var(--muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.4px', marginBottom: 12 }}>Operating hours</div>
+                  <div className="list-row" style={{ padding: '7px 0', fontSize: 12.5, fontWeight: 600 }}><span>Mon – Fri</span><span>7:00 – 21:00</span></div>
+                  <div className="list-row" style={{ padding: '7px 0', fontSize: 12.5, fontWeight: 600 }}><span>Sat – Sun</span><span>7:00 – 22:00</span></div>
+                  <button className="btn-solid" style={{ width: '100%', marginTop: 14, padding: 12 }}>Contact Business</button>
+                  <button className="btn-ghost" style={{ width: '100%', marginTop: 8, padding: 12 }} onClick={() => setView('list')}>Back to directory</button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </section>
   );
 }
